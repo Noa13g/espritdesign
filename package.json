@@ -1,0 +1,10 @@
+{
+  "name": "esprit-design-portal-v2",
+  "version": "2.0.0",
+  "private": true,
+  "description": "Portail V2 de démonstration Esprit Design Architecture",
+  "scripts": {
+    "start": "node server.js",
+    "check": "node --check server.js && node --check app.js"
+  }
+}
