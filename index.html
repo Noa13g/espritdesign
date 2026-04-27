@@ -1,0 +1,2529 @@
+<!doctype html>
+<html lang="fr">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Esprit Design Architecture - Démo Portail</title>
+    <style>
+      :root {
+        --moss: #9ea882;
+        --obsidian: #706b75;
+        --brown: #947a69;
+        --cool: #d3d0cd;
+        --beige: #f4ebe4;
+        --paper: #f4ebe4;
+        --ink: #706b75;
+        --muted: #706b75;
+        --white: #f4ebe4;
+        --surface: #d3d0cd;
+        --line: rgba(112, 107, 117, 0.22);
+        --line-strong: rgba(112, 107, 117, 0.38);
+        --shadow: 0 24px 70px rgba(112, 107, 117, 0.18);
+        --soft: 0 16px 34px rgba(112, 107, 117, 0.12);
+      }
+
+      * { box-sizing: border-box; }
+      html { scroll-behavior: smooth; }
+      body {
+        margin: 0;
+        color: var(--obsidian);
+        background: var(--paper);
+        font-family: "Open Sans", Arial, sans-serif;
+        line-height: 1.65;
+      }
+      body.locked { overflow: hidden; }
+      img { max-width: 100%; display: block; }
+      a { color: inherit; text-decoration: none; }
+      button, input, textarea, select { font: inherit; }
+
+      .site-header {
+        position: sticky;
+        top: 0;
+        z-index: 50;
+        background: rgba(244, 235, 228, 0.94);
+        border-bottom: 1px solid var(--line);
+        backdrop-filter: blur(18px);
+      }
+      .nav-wrap {
+        width: min(1200px, calc(100% - 40px));
+        margin: 0 auto;
+        display: grid;
+        grid-template-columns: 150px 1fr auto;
+        gap: 24px;
+        align-items: center;
+        min-height: 106px;
+      }
+      .logo {
+        display: grid;
+        place-items: center;
+        width: 108px;
+        height: 108px;
+      }
+      .logo img {
+        width: 92px;
+        height: 92px;
+        object-fit: contain;
+      }
+      .menu {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        gap: 26px;
+        color: var(--obsidian);
+        font-size: 16px;
+      }
+      .menu a {
+        position: relative;
+        padding: 10px 0;
+      }
+      .menu a::after {
+        content: "";
+        position: absolute;
+        left: 0;
+        bottom: 4px;
+        width: 0;
+        height: 1px;
+        background: var(--moss);
+        transition: width .22s ease;
+      }
+      .menu a:hover::after { width: 100%; }
+      .portal-button {
+        border: 0;
+        background: var(--brown);
+        color: var(--paper);
+        min-height: 44px;
+        padding: 0 18px;
+        letter-spacing: .08em;
+        text-transform: uppercase;
+        font-size: 12px;
+        font-weight: 800;
+        cursor: pointer;
+        transition: transform .2s ease, background .2s ease;
+      }
+      .portal-button:hover {
+        transform: translateY(-1px);
+        background: var(--obsidian);
+      }
+      .mobile-toggle { display: none; }
+
+      .hero {
+        min-height: calc(100vh - 106px);
+        display: grid;
+        grid-template-columns: minmax(0, 0.92fr) minmax(420px, 1.08fr);
+        width: min(1200px, calc(100% - 40px));
+        margin: 0 auto;
+        align-items: center;
+        gap: 48px;
+        padding: 44px 0 70px;
+      }
+      .hero-copy {
+        padding: 46px 42px 46px 0;
+      }
+      .hero h1 {
+        margin: 0 0 26px;
+        color: var(--moss);
+        font-family: Georgia, "Times New Roman", serif;
+        font-size: clamp(46px, 6.8vw, 82px);
+        line-height: 1.05;
+        font-weight: 600;
+      }
+      .hero p {
+        max-width: 560px;
+        margin: 0;
+        color: var(--obsidian);
+        font-size: 16px;
+      }
+      .button-line {
+        display: inline-flex;
+        align-items: center;
+        gap: 18px;
+        margin-top: 34px;
+        color: var(--obsidian);
+        text-transform: uppercase;
+        letter-spacing: .18em;
+        font-weight: 800;
+        font-size: 12px;
+      }
+      .button-line::before {
+        content: "";
+        width: 92px;
+        height: 40px;
+        background: url("https://www.esprit-design-architecture.com/wp-content/uploads/2024/12/Design-sans-titre-36.png") center / contain no-repeat;
+      }
+      .hero-visual {
+        position: relative;
+        min-height: 590px;
+        overflow: hidden;
+        background: var(--cool);
+      }
+      .hero-visual img {
+        width: 100%;
+        height: 100%;
+        min-height: 590px;
+        object-fit: cover;
+      }
+      .hero-card {
+        position: absolute;
+        right: 28px;
+        bottom: 28px;
+        width: min(360px, calc(100% - 56px));
+        background: rgba(244, 235, 228, .88);
+        padding: 22px;
+        border: 1px solid var(--line);
+        box-shadow: var(--shadow);
+      }
+      .hero-card strong {
+        display: block;
+        color: var(--brown);
+        text-transform: uppercase;
+        letter-spacing: .14em;
+        font-size: 12px;
+        margin-bottom: 8px;
+      }
+
+      .section {
+        width: min(1200px, calc(100% - 40px));
+        margin: 0 auto;
+        padding: 86px 0;
+      }
+      .section.compact { padding-top: 34px; }
+      .section-title {
+        display: grid;
+        grid-template-columns: 0.55fr 1fr;
+        gap: 36px;
+        align-items: end;
+        margin-bottom: 42px;
+      }
+      .section-title h2 {
+        margin: 0;
+        color: var(--moss);
+        font-size: clamp(34px, 4.5vw, 58px);
+        line-height: 1.06;
+        font-family: Georgia, "Times New Roman", serif;
+      }
+      .section-title p {
+        margin: 0;
+        max-width: 680px;
+      }
+      .split {
+        display: grid;
+        grid-template-columns: 0.92fr 1.08fr;
+        gap: 44px;
+        align-items: center;
+      }
+      .split img {
+        height: 520px;
+        width: 100%;
+        object-fit: cover;
+      }
+      .text-panel {
+        padding: 42px;
+        background: var(--beige);
+        box-shadow: var(--soft);
+        border: 1px solid var(--line);
+        border-radius: 8px;
+      }
+      .text-panel h3 {
+        color: var(--obsidian);
+        font-size: 24px;
+        margin: 0 0 18px;
+      }
+
+      .services {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 24px;
+      }
+      .service-card {
+        background: var(--beige);
+        min-height: 100%;
+        box-shadow: var(--soft);
+        border: 1px solid var(--line);
+        border-radius: 8px;
+        overflow: hidden;
+        transition: transform .22s ease, box-shadow .22s ease;
+      }
+      .service-card:hover {
+        transform: translateY(-5px);
+        box-shadow: var(--shadow);
+      }
+      .service-card img {
+        width: 100%;
+        height: 255px;
+        object-fit: cover;
+      }
+      .service-card div { padding: 24px; }
+      .service-card h3 {
+        margin: 0 0 14px;
+        color: var(--obsidian);
+        font-size: 22px;
+      }
+      .small-link {
+        display: inline-flex;
+        align-items: center;
+        gap: 10px;
+        margin-top: 18px;
+        color: var(--brown);
+        font-size: 12px;
+        text-transform: uppercase;
+        letter-spacing: .14em;
+        font-weight: 800;
+      }
+      .small-link::before {
+        content: "";
+        width: 32px;
+        height: 1px;
+        background: var(--brown);
+      }
+
+      .quote-band {
+        background: var(--beige);
+        padding: 92px 0;
+      }
+      .quote-inner {
+        width: min(1040px, calc(100% - 40px));
+        margin: 0 auto;
+        display: grid;
+        grid-template-columns: 300px 1fr;
+        gap: 52px;
+        align-items: center;
+      }
+      .quote-inner img {
+        width: 300px;
+        height: 360px;
+        object-fit: cover;
+      }
+      blockquote {
+        margin: 0;
+        color: var(--obsidian);
+        font-size: clamp(24px, 3.2vw, 38px);
+        line-height: 1.32;
+        font-style: italic;
+      }
+      cite {
+        display: block;
+        margin-top: 26px;
+        color: var(--brown);
+        font-style: normal;
+      }
+
+      .gallery {
+        display: grid;
+        grid-template-columns: repeat(4, 1fr);
+        gap: 12px;
+      }
+      .project-card {
+        position: relative;
+        overflow: hidden;
+        background: var(--cool);
+        min-height: 225px;
+        cursor: pointer;
+      }
+      .project-card img {
+        width: 100%;
+        height: 100%;
+        min-height: 225px;
+        object-fit: cover;
+        transition: transform .4s ease, filter .4s ease;
+      }
+      .project-card span {
+        position: absolute;
+        inset: auto 12px 12px 12px;
+        background: rgba(244, 235, 228, .9);
+        color: var(--obsidian);
+        padding: 10px 12px;
+        font-weight: 800;
+        letter-spacing: .06em;
+        text-transform: uppercase;
+        font-size: 11px;
+      }
+      .project-card:hover img {
+        transform: scale(1.06);
+        filter: saturate(.8);
+      }
+
+      .portal-section {
+        width: min(1280px, calc(100% - 40px));
+        margin: 0 auto 90px;
+        padding: 58px;
+        background:
+          linear-gradient(rgba(244, 235, 228, .84), rgba(244, 235, 228, .84)),
+          url("https://images.unsplash.com/photo-1600607687920-4e2a09cf159d?q=80&w=1800&auto=format&fit=crop") center / cover;
+        box-shadow: var(--shadow);
+      }
+      .portal-grid {
+        display: grid;
+        grid-template-columns: .88fr 1.12fr;
+        gap: 38px;
+        align-items: center;
+      }
+      .portal-copy h2 {
+        color: var(--brown);
+        font-size: clamp(38px, 5vw, 70px);
+        line-height: 1;
+        margin: 0 0 18px;
+        font-family: Georgia, "Times New Roman", serif;
+      }
+      .mockup {
+        display: grid;
+        gap: 16px;
+      }
+      .mock-window {
+        border: 18px solid var(--obsidian);
+        border-radius: 30px;
+        overflow: hidden;
+        background: var(--beige);
+        box-shadow: var(--shadow);
+      }
+      .mock-cover {
+        height: 92px;
+        background: url("https://images.unsplash.com/photo-1600607687920-4e2a09cf159d?q=80&w=1200&auto=format&fit=crop") center / cover;
+        display: flex;
+        justify-content: flex-end;
+        align-items: end;
+        padding: 18px 26px;
+        color: var(--obsidian);
+        font-size: 24px;
+        letter-spacing: .08em;
+      }
+      .mock-body { padding: 24px; }
+      .mock-body h3 { margin: 0 0 18px; color: var(--obsidian); }
+      .mock-cards {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 10px;
+      }
+      .mock-cards div {
+        border: 1px solid var(--line);
+        background: var(--cool);
+        padding: 12px;
+        min-height: 98px;
+        border-radius: 8px;
+      }
+      .mock-cards b { color: var(--brown); }
+
+      .contact-band {
+        background: var(--obsidian);
+        color: var(--paper);
+        padding: 70px 0;
+      }
+      .contact-inner {
+        width: min(1040px, calc(100% - 40px));
+        margin: 0 auto;
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 36px;
+        align-items: start;
+      }
+      .contact-inner h2 {
+        color: var(--beige);
+        margin: 8px 0 16px;
+        font-size: 42px;
+      }
+      .form {
+        background: rgba(211, 208, 205, .18);
+        padding: 24px;
+        display: grid;
+        gap: 12px;
+        border: 1px solid var(--line);
+        border-radius: 8px;
+      }
+      .form input,
+      .form textarea,
+      .form select {
+        width: 100%;
+        border: 1px solid var(--line);
+        background: var(--beige);
+        color: var(--obsidian);
+        padding: 13px;
+        border-radius: 8px;
+      }
+      .form input::placeholder,
+      .form textarea::placeholder { color: var(--obsidian); }
+      .form button {
+        border: 0;
+        background: var(--moss);
+        color: var(--beige);
+        padding: 14px;
+        cursor: pointer;
+        font-weight: 800;
+        border-radius: 8px;
+      }
+      .notice {
+        display: none;
+        background: var(--moss);
+        color: var(--beige);
+        border: 1px solid var(--line);
+        border-radius: 8px;
+        padding: 12px;
+      }
+      .notice.show { display: block; }
+
+      .footer {
+        background: var(--beige);
+        color: var(--obsidian);
+        padding: 42px 0;
+      }
+      .footer-inner {
+        width: min(1040px, calc(100% - 40px));
+        margin: 0 auto;
+        display: flex;
+        justify-content: space-between;
+        gap: 22px;
+        flex-wrap: wrap;
+      }
+
+      .modal {
+        position: fixed;
+        inset: 0;
+        z-index: 100;
+        display: none;
+        place-items: center;
+        background: rgba(112, 107, 117, .5);
+        backdrop-filter: blur(12px);
+        padding: 20px;
+      }
+      .modal.show { display: grid; }
+      .login-card {
+        width: min(960px, 100%);
+        background: var(--paper);
+        box-shadow: var(--shadow);
+        display: grid;
+        grid-template-columns: .92fr 1.08fr;
+        min-height: 560px;
+      }
+      .login-art {
+        background:
+          linear-gradient(rgba(112,107,117,.15), rgba(112,107,117,.15)),
+          url("https://images.unsplash.com/photo-1618221195710-dd6b41faaea6?q=80&w=1200&auto=format&fit=crop") center / cover;
+        padding: 34px;
+        display: flex;
+        flex-direction: column;
+        justify-content: flex-end;
+      }
+      .login-art h2 {
+        margin: 0;
+        color: var(--beige);
+        font-size: 42px;
+        line-height: 1.05;
+        text-shadow: 0 12px 40px rgba(112,107,117,.42);
+      }
+      .login-form {
+        padding: 40px;
+        display: grid;
+        align-content: center;
+        gap: 16px;
+      }
+      .login-form h2 {
+        margin: 0 0 4px;
+        color: var(--brown);
+        font-size: 34px;
+      }
+      .login-form label {
+        display: grid;
+        gap: 6px;
+        color: var(--obsidian);
+        font-size: 13px;
+        font-weight: 800;
+      }
+      .login-form input,
+      .login-form select {
+        border: 1px solid var(--line);
+        padding: 13px;
+        background: var(--beige);
+        color: var(--obsidian);
+        border-radius: 8px;
+      }
+      .login-actions {
+        display: flex;
+        gap: 10px;
+        align-items: center;
+        flex-wrap: wrap;
+      }
+      .login-actions button,
+      .dash-button {
+        border: 0;
+        background: var(--brown);
+        color: var(--beige);
+        padding: 12px 18px;
+        cursor: pointer;
+        font-weight: 800;
+        border-radius: 8px;
+        letter-spacing: .03em;
+        transition: transform .18s ease, background .18s ease;
+      }
+      .login-actions button:hover,
+      .dash-button:hover {
+        background: var(--obsidian);
+        transform: translateY(-1px);
+      }
+      .ghost {
+        background: transparent !important;
+        color: var(--obsidian) !important;
+        border: 1px solid var(--line) !important;
+      }
+
+      .app {
+        display: none;
+        min-height: 100vh;
+        background: var(--beige);
+      }
+      .app.show { display: block; }
+      .app-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        gap: 16px;
+        padding: 16px 22px;
+        background: var(--beige);
+        border-bottom: 1px solid var(--line);
+        position: sticky;
+        top: 0;
+        z-index: 30;
+        backdrop-filter: blur(18px);
+      }
+      .app-header strong {
+        color: var(--brown);
+        font-size: 18px;
+        letter-spacing: .04em;
+      }
+      .app-header > div {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 8px;
+        justify-content: flex-end;
+      }
+      .app-layout {
+        display: grid;
+        grid-template-columns: 280px 1fr;
+        min-height: calc(100vh - 73px);
+      }
+      .sidebar {
+        background: var(--obsidian);
+        color: var(--beige);
+        padding: 22px;
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+        border-right: 1px solid var(--line-strong);
+      }
+      .sidebar button {
+        width: 100%;
+        border: 0;
+        text-align: left;
+        color: var(--cool);
+        background: transparent;
+        padding: 13px 14px;
+        cursor: pointer;
+        border-radius: 8px;
+        font-weight: 800;
+        letter-spacing: .01em;
+        transition: background .18s ease, color .18s ease, transform .18s ease;
+      }
+      .sidebar button.active,
+      .sidebar button:hover {
+        background: var(--beige);
+        color: var(--obsidian);
+        transform: translateX(2px);
+      }
+      .app-main {
+        padding: 28px;
+        max-width: 1480px;
+        width: 100%;
+      }
+      .dash-section { display: none; }
+      .dash-section.active { display: block; }
+      .dash-head {
+        display: flex;
+        justify-content: space-between;
+        gap: 18px;
+        align-items: start;
+        margin-bottom: 18px;
+        background: var(--cool);
+        border: 1px solid var(--line);
+        border-radius: 8px;
+        padding: 22px;
+      }
+      .dash-head h1 {
+        margin: 0 0 6px;
+        color: var(--brown);
+        font-size: clamp(30px, 3vw, 44px);
+        line-height: 1;
+        font-family: Georgia, "Times New Roman", serif;
+      }
+      .dash-head p {
+        margin: 0;
+        max-width: 760px;
+      }
+      .kpi-grid {
+        display: grid;
+        grid-template-columns: repeat(4, 1fr);
+        gap: 12px;
+        margin-bottom: 18px;
+      }
+      .kpi {
+        background: var(--cool);
+        padding: 18px;
+        border: 1px solid var(--line);
+        border-radius: 8px;
+        min-height: 118px;
+        display: grid;
+        align-content: space-between;
+      }
+      .kpi b {
+        display: block;
+        color: var(--brown);
+        font-size: 34px;
+        line-height: 1;
+      }
+      .kpi span {
+        color: var(--obsidian);
+        font-size: 12px;
+        text-transform: uppercase;
+        letter-spacing: .08em;
+        font-weight: 800;
+      }
+      .dash-grid {
+        display: grid;
+        grid-template-columns: 1.2fr .8fr;
+        gap: 14px;
+      }
+      .dash-card {
+        background: var(--beige);
+        border: 1px solid var(--line);
+        border-radius: 8px;
+        padding: 20px;
+        min-height: 160px;
+        box-shadow: var(--soft);
+      }
+      .dash-card h3,
+      .admin-card h3 {
+        margin: 0 0 14px;
+        color: var(--obsidian);
+        font-size: 18px;
+      }
+      .dash-table {
+        width: 100%;
+        border-collapse: collapse;
+      }
+      .dash-table th,
+      .dash-table td {
+        border-bottom: 1px solid var(--line);
+        padding: 13px 12px;
+        text-align: left;
+        vertical-align: top;
+      }
+      .dash-table tr:hover td { background: var(--cool); }
+      .dash-table th {
+        font-size: 11px;
+        text-transform: uppercase;
+        letter-spacing: .08em;
+        color: var(--obsidian);
+      }
+      .status {
+        display: inline-flex;
+        align-items: center;
+        min-height: 24px;
+        padding: 0 9px;
+        border-radius: 999px;
+        background: var(--moss);
+        color: var(--beige);
+        font-weight: 800;
+        font-size: 12px;
+      }
+      .status.warn { background: var(--brown); color: var(--beige); }
+      .status.danger { background: var(--obsidian); color: var(--beige); }
+      .product-grid {
+        display: grid;
+        grid-template-columns: repeat(4, 1fr);
+        gap: 14px;
+      }
+      .product-card {
+        background: var(--beige);
+        border: 1px solid var(--line);
+        overflow: hidden;
+        border-radius: 8px;
+        box-shadow: var(--soft);
+      }
+      .product-card img {
+        width: 100%;
+        height: 154px;
+        object-fit: cover;
+      }
+      .product-card div {
+        padding: 14px;
+      }
+      .product-card button {
+        width: 100%;
+        margin-top: 10px;
+        border: 0;
+        background: var(--moss);
+        color: var(--beige);
+        padding: 11px;
+        cursor: pointer;
+        border-radius: 8px;
+        font-weight: 800;
+      }
+      .product-card .action-row button {
+        width: auto;
+        flex: 1 1 120px;
+      }
+      .timeline {
+        display: grid;
+        gap: 14px;
+      }
+      .timeline-item {
+        background: var(--beige);
+        border-left: 5px solid var(--moss);
+        padding: 18px;
+        box-shadow: var(--soft);
+        border-radius: 0 8px 8px 0;
+      }
+      .phase-board,
+      .budget-board,
+      .admin-grid,
+      .meeting-grid {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 14px;
+      }
+      .phase-card {
+        background: var(--beige);
+        border: 1px solid var(--line);
+        border-radius: 8px;
+        padding: 18px;
+        min-height: 168px;
+        box-shadow: var(--soft);
+      }
+      .phase-card strong,
+      .budget-line strong {
+        display: block;
+        color: var(--brown);
+        font-size: 18px;
+        margin-bottom: 6px;
+      }
+      .progress-track {
+        height: 8px;
+        background: var(--cool);
+        margin: 14px 0 10px;
+        overflow: hidden;
+        border-radius: 999px;
+      }
+      .progress-track span {
+        display: block;
+        height: 100%;
+        background: var(--moss);
+        border-radius: 999px;
+      }
+      .budget-line {
+        background: var(--beige);
+        border: 1px solid var(--line);
+        border-radius: 8px;
+        padding: 18px;
+        box-shadow: var(--soft);
+      }
+      .budget-line output {
+        display: block;
+        margin-top: 10px;
+        color: var(--obsidian);
+        font-weight: 800;
+      }
+      .tool-form {
+        display: grid;
+        gap: 12px;
+      }
+      .tool-form input,
+      .tool-form textarea,
+      .tool-form select {
+        width: 100%;
+        border: 1px solid var(--line);
+        background: var(--beige);
+        color: var(--obsidian);
+        padding: 12px;
+        border-radius: 8px;
+        outline: none;
+      }
+      .tool-form input:focus,
+      .tool-form textarea:focus,
+      .tool-form select:focus,
+      .login-form input:focus,
+      .login-form select:focus {
+        border-color: var(--brown);
+        box-shadow: 0 0 0 3px rgba(148, 122, 105, .18);
+      }
+      .tool-form label {
+        display: grid;
+        gap: 6px;
+        font-size: 13px;
+        font-weight: 800;
+        color: var(--obsidian);
+      }
+      .admin-card {
+        background: var(--beige);
+        border: 1px solid var(--line);
+        border-radius: 8px;
+        padding: 18px;
+        box-shadow: var(--soft);
+      }
+      .admin-card button,
+      .inline-actions button {
+        margin-top: 10px;
+      }
+      .control-grid {
+        display: grid;
+        grid-template-columns: repeat(4, 1fr);
+        gap: 12px;
+        margin-bottom: 16px;
+      }
+      .control-button,
+      .mini-button {
+        border: 1px solid var(--line);
+        background: var(--beige);
+        color: var(--obsidian);
+        border-radius: 8px;
+        cursor: pointer;
+        font-weight: 800;
+        transition: background .18s ease, transform .18s ease;
+      }
+      .control-button {
+        min-height: 96px;
+        padding: 14px;
+        text-align: left;
+        box-shadow: var(--soft);
+      }
+      .control-button span {
+        display: block;
+        margin-top: 5px;
+        font-size: 12px;
+        font-weight: 600;
+        line-height: 1.35;
+      }
+      .mini-button {
+        padding: 8px 10px;
+        font-size: 12px;
+        margin: 2px;
+      }
+      .control-button:hover,
+      .mini-button:hover {
+        background: var(--cool);
+        transform: translateY(-1px);
+      }
+      .action-row {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 6px;
+      }
+      .admin-strip {
+        display: none;
+        grid-template-columns: repeat(4, 1fr);
+        gap: 8px;
+        margin: 0 0 16px;
+      }
+      .admin-strip.show {
+        display: grid;
+      }
+      .gantt-card {
+        margin-bottom: 16px;
+        overflow-x: auto;
+      }
+      .gantt {
+        min-width: 980px;
+        display: grid;
+        gap: 10px;
+      }
+      .gantt-head,
+      .gantt-row {
+        display: grid;
+        grid-template-columns: 170px repeat(6, 1fr);
+        gap: 8px;
+        align-items: center;
+      }
+      .gantt-head span {
+        color: var(--obsidian);
+        font-size: 11px;
+        text-transform: uppercase;
+        letter-spacing: .08em;
+        font-weight: 800;
+      }
+      .gantt-project {
+        color: var(--brown);
+        font-weight: 800;
+      }
+      .gantt-cell {
+        min-height: 34px;
+        background: var(--cool);
+        border: 1px solid var(--line);
+        border-radius: 999px;
+        overflow: hidden;
+      }
+      .gantt-bar {
+        height: 100%;
+        display: grid;
+        place-items: center;
+        color: var(--beige);
+        background: var(--moss);
+        font-size: 11px;
+        font-weight: 800;
+        white-space: nowrap;
+      }
+      .gantt-bar.warn { background: var(--brown); }
+      .gantt-bar.idle { background: var(--obsidian); }
+      .analysis-result {
+        display: grid;
+        gap: 10px;
+        margin-top: 12px;
+      }
+      .analysis-line {
+        display: grid;
+        grid-template-columns: 1fr auto;
+        gap: 10px;
+        align-items: center;
+        background: var(--cool);
+        border: 1px solid var(--line);
+        border-radius: 8px;
+        padding: 10px;
+      }
+      .analysis-line strong {
+        color: var(--brown);
+      }
+      .detail-grid,
+      .ai-grid {
+        display: grid;
+        grid-template-columns: 1.1fr .9fr;
+        gap: 14px;
+      }
+      .project-hero {
+        min-height: 320px;
+        background: var(--cool);
+        border-radius: 8px;
+        overflow: hidden;
+        margin-bottom: 14px;
+      }
+      .project-hero img {
+        width: 100%;
+        height: 320px;
+        object-fit: cover;
+      }
+      .ai-panel {
+        background: var(--cool);
+        border: 1px solid var(--line);
+        border-radius: 8px;
+        padding: 14px;
+      }
+      .ai-output {
+        display: grid;
+        gap: 10px;
+        margin-top: 12px;
+      }
+      .ai-output .feed-item {
+        box-shadow: none;
+      }
+      .checklist {
+        display: grid;
+        gap: 8px;
+        margin-top: 12px;
+      }
+      .checklist label {
+        display: flex;
+        gap: 9px;
+        align-items: flex-start;
+        background: var(--beige);
+        border: 1px solid var(--line);
+        border-radius: 8px;
+        padding: 10px;
+        font-weight: 700;
+      }
+      .project-context {
+        display: grid;
+        grid-template-columns: 1fr auto;
+        gap: 14px;
+        align-items: center;
+        background: var(--obsidian);
+        color: var(--beige);
+        border-radius: 8px;
+        padding: 16px 18px;
+        margin-bottom: 16px;
+      }
+      .project-context strong {
+        display: block;
+        font-size: 20px;
+        color: var(--beige);
+      }
+      .project-context span {
+        display: block;
+        color: var(--cool);
+      }
+      .project-context select {
+        min-width: 240px;
+        border: 1px solid var(--line);
+        background: var(--beige);
+        color: var(--obsidian);
+        border-radius: 8px;
+        padding: 11px;
+        font-weight: 800;
+      }
+      .image-preview {
+        min-height: 190px;
+        background: var(--cool);
+        border: 1px dashed var(--line-strong);
+        border-radius: 8px;
+        display: grid;
+        place-items: center;
+        color: var(--muted);
+        overflow: hidden;
+      }
+      .image-preview img {
+        width: 100%;
+        height: 240px;
+        object-fit: cover;
+      }
+      .feed {
+        display: grid;
+        gap: 12px;
+      }
+      .feed-item {
+        background: var(--beige);
+        border: 1px solid var(--line);
+        border-radius: 8px;
+        padding: 14px;
+        box-shadow: var(--soft);
+      }
+      .feed-item img {
+        width: 100%;
+        height: 180px;
+        object-fit: cover;
+        margin-bottom: 10px;
+      }
+      .client-only-note {
+        background: var(--cool);
+        border: 1px solid var(--line);
+        border-radius: 8px;
+        padding: 14px;
+        margin-bottom: 16px;
+      }
+      .quick-actions {
+        display: grid;
+        grid-template-columns: repeat(4, 1fr);
+        gap: 12px;
+        margin-bottom: 16px;
+      }
+      .quick-action {
+        border: 1px solid var(--line);
+        background: var(--beige);
+        color: var(--obsidian);
+        border-radius: 8px;
+        padding: 14px;
+        text-align: left;
+        cursor: pointer;
+        box-shadow: var(--soft);
+        transition: transform .18s ease, background .18s ease;
+      }
+      .quick-action:hover {
+        background: var(--cool);
+        transform: translateY(-2px);
+      }
+      .quick-action strong {
+        display: block;
+        color: var(--brown);
+        margin-bottom: 4px;
+      }
+      .quick-action span {
+        display: block;
+        font-size: 12px;
+        line-height: 1.35;
+      }
+      .phase-selector {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 8px;
+        margin: 8px 0 18px;
+      }
+      .phase-selector button {
+        border: 1px solid var(--line);
+        background: var(--beige);
+        color: var(--obsidian);
+        padding: 9px 12px;
+        cursor: pointer;
+        border-radius: 999px;
+        font-weight: 800;
+      }
+      .phase-selector button.active {
+        background: var(--obsidian);
+        color: var(--beige);
+      }
+
+      @media (max-width: 980px) {
+        .nav-wrap {
+          grid-template-columns: auto 1fr auto;
+          min-height: 86px;
+        }
+        .logo { width: 76px; height: 76px; }
+        .logo img { width: 66px; height: 66px; }
+        .mobile-toggle {
+          display: inline-flex;
+          border: 0;
+          background: transparent;
+          color: var(--obsidian);
+          font-size: 28px;
+          justify-self: end;
+        }
+        .menu {
+          display: none;
+          grid-column: 1 / -1;
+          justify-content: flex-start;
+          flex-wrap: wrap;
+          padding-bottom: 18px;
+        }
+        .menu.open { display: flex; }
+        .portal-button { grid-column: 3; }
+        .hero,
+        .split,
+        .portal-grid,
+        .quote-inner,
+        .contact-inner,
+        .login-card,
+        .app-layout,
+        .dash-grid,
+        .phase-board,
+        .budget-board,
+        .admin-grid,
+        .meeting-grid {
+          grid-template-columns: 1fr;
+        }
+        .project-context {
+          grid-template-columns: 1fr;
+        }
+        .hero-copy { padding-right: 0; }
+        .services,
+        .gallery,
+        .kpi-grid,
+        .product-grid,
+        .quick-actions,
+        .control-grid,
+        .admin-strip {
+          grid-template-columns: repeat(2, 1fr);
+        }
+        .sidebar {
+          display: flex;
+          overflow-x: auto;
+          gap: 8px;
+        }
+        .sidebar button { min-width: 170px; }
+        .meeting-grid .dash-card { grid-column: auto !important; }
+        .detail-grid,
+        .ai-grid { grid-template-columns: 1fr; }
+      }
+      @media (max-width: 640px) {
+        .portal-button { padding: 0 12px; font-size: 10px; }
+        .hero-visual, .hero-visual img { min-height: 420px; }
+        .section-title,
+        .services,
+        .gallery,
+        .kpi-grid,
+        .product-grid,
+        .quick-actions,
+        .control-grid,
+        .admin-strip,
+        .mock-cards {
+          grid-template-columns: 1fr;
+        }
+        .portal-section { padding: 28px; }
+        .app-main { padding: 16px; }
+      }
+    </style>
+  </head>
+  <body>
+    <div id="website">
+      <header class="site-header">
+        <div class="nav-wrap">
+          <a class="logo" href="#accueil" aria-label="Esprit Design Architecture">
+            <img src="https://www.esprit-design-architecture.com/wp-content/uploads/2025/01/Design-sans-titre-2025-01-15T143328.321.png" alt="Esprit Design Architecture" />
+          </a>
+          <nav class="menu" id="menu">
+            <a href="#agence">L’agence</a>
+            <a href="#prestations">Prestations</a>
+            <a href="#realisations">Réalisations</a>
+            <a href="#portail">Portail projet</a>
+            <a href="#contact">Contact</a>
+          </nav>
+          <button class="portal-button" data-open-login>Accès privé</button>
+          <button class="mobile-toggle" id="mobileToggle" aria-label="Menu">☰</button>
+        </div>
+      </header>
+
+      <main id="accueil">
+        <section class="hero">
+          <div class="hero-copy">
+            <h1>Concevoir,<br />innover,<br />transformer</h1>
+            <p>Concevoir des espaces fonctionnels, esthétiques et personnalisés, où chaque détail reflète votre vision et votre style de vie.</p>
+            <a class="button-line" href="#realisations">nos réalisations</a>
+          </div>
+          <div class="hero-visual">
+            <img src="https://www.esprit-design-architecture.com/wp-content/uploads/2024/12/Sans-titre-700-x-600-px.png" alt="Architecture intérieure Esprit Design" />
+            <div class="hero-card">
+              <strong>Nouveau</strong>
+              <p>Un portail privé pour suivre vos projets, valider vos sélections et retrouver tous vos documents.</p>
+            </div>
+          </div>
+        </section>
+
+        <section class="section compact" id="agence">
+          <div class="split">
+            <img src="https://www.esprit-design-architecture.com/wp-content/uploads/2025/02/Design-sans-titre-2025-02-24T165514.764.png" alt="Intérieur conçu par Esprit Design" />
+            <div class="text-panel">
+              <h3>A propos</h3>
+              <p>Esprit Design est une agence d’architecture d’intérieur dédiée à la transformation et à la valorisation des espaces de vie. Que ce soit pour la rénovation complète d’un espace, la réorganisation de volumes ou la décoration d’intérieur, nous mettons notre expertise au service de projets uniques et sur-mesure.</p>
+              <a href="#prestations" class="small-link">Découvrir l’agence</a>
+            </div>
+          </div>
+        </section>
+
+        <section class="section" id="prestations">
+          <div class="section-title">
+            <h2>Prestations</h2>
+            <p>Des accompagnements adaptés à chaque projet : conception, décoration, rendus 3D, suivi esthétique des travaux et pilotage client.</p>
+          </div>
+          <div class="services">
+            <article class="service-card">
+              <img src="https://www.esprit-design-architecture.com/wp-content/uploads/2024/12/Design-sans-titre-29.png" alt="Conception et rendu 3D" />
+              <div>
+                <h3>Conception & Rendu 3D</h3>
+                <p>Visualisation modélisée en 3D ou élaboration complète de votre projet, en tenant compte de vos besoins, de votre budget et de vos envies.</p>
+                <a href="#contact" class="small-link">Découvrir</a>
+              </div>
+            </article>
+            <article class="service-card">
+              <img src="https://www.esprit-design-architecture.com/wp-content/uploads/2024/12/Design-sans-titre-28.png" alt="Aménagement et décoration" />
+              <div>
+                <h3>Aménagement & Décoration</h3>
+                <p>Conseils à domicile ou projet global d’aménagement, avec des solutions concrètes pour créer un intérieur à la fois pratique et agréable.</p>
+                <a href="#contact" class="small-link">Découvrir</a>
+              </div>
+            </article>
+            <article class="service-card">
+              <img src="https://www.esprit-design-architecture.com/wp-content/uploads/2024/12/Design-sans-titre-27.png" alt="Gestion de projet" />
+              <div>
+                <h3>Gestion de projet</h3>
+                <p>Coordination esthétique, suivi des décisions, planning client et accompagnement jusqu’à la réalisation complète du projet.</p>
+                <a href="#portail" class="small-link">Voir le portail</a>
+              </div>
+            </article>
+          </div>
+        </section>
+
+        <section class="quote-band">
+          <div class="quote-inner">
+            <img src="https://www.esprit-design-architecture.com/wp-content/uploads/2025/01/IMG_4364.jpeg" alt="Emmanuelle Gobert" />
+            <div>
+              <blockquote>Chez Esprit Design, nous pensons que chaque projet raconte une histoire. Notre engagement est de donner vie à des intérieurs inspirants qui apportent un véritable bien-être au quotidien.</blockquote>
+              <cite>Emmanuelle Gobert, fondatrice d’Esprit Design</cite>
+            </div>
+          </div>
+        </section>
+
+        <section class="section" id="realisations">
+          <div class="section-title">
+            <h2>Réalisations</h2>
+            <p>Paris, Aix-en-Provence, Marseille, le Lot… Esprit Design se transporte au fil de vos projets.</p>
+          </div>
+          <div class="gallery" id="gallery">
+            <button class="project-card" data-project="Projet Estang"><img src="https://esprit-design-architecture.fr/wp-content/uploads/2024/12/Design-sans-titre-47.png" alt="Projet Estang" /><span>Projet Estang</span></button>
+            <button class="project-card" data-project="Projet Dardanelles"><img src="https://esprit-design-architecture.fr/wp-content/uploads/2024/12/Design-sans-titre-48.png" alt="Projet Dardanelles" /><span>Projet Dardanelles</span></button>
+            <button class="project-card" data-project="Projet Foch"><img src="https://esprit-design-architecture.fr/wp-content/uploads/2024/12/Design-sans-titre-41.png" alt="Projet Foch" /><span>Projet Foch</span></button>
+            <button class="project-card" data-project="Projet Bali"><img src="https://esprit-design-architecture.fr/wp-content/uploads/2024/12/Design-sans-titre-43.png" alt="Projet Bali" /><span>Projet Bali</span></button>
+            <button class="project-card" data-project="Projet London"><img src="https://esprit-design-architecture.fr/wp-content/uploads/2024/12/Design-sans-titre-42.png" alt="Projet London" /><span>Projet London</span></button>
+            <button class="project-card" data-project="Projet Goron"><img src="https://esprit-design-architecture.fr/wp-content/uploads/2024/12/Design-sans-titre-39.png" alt="Projet Goron" /><span>Projet Goron</span></button>
+            <button class="project-card" data-project="Projet Perché"><img src="https://esprit-design-architecture.fr/wp-content/uploads/2024/12/Design-sans-titre-38.png" alt="Projet Perché" /><span>Projet Perché</span></button>
+            <button class="project-card" data-project="Projet Plumier"><img src="https://esprit-design-architecture.fr/wp-content/uploads/2024/12/Design-sans-titre-37.png" alt="Projet Plumier" /><span>Projet Plumier</span></button>
+          </div>
+        </section>
+
+        <section class="portal-section" id="portail">
+          <div class="portal-grid">
+            <div class="portal-copy">
+              <h2>Portail projet privé</h2>
+              <p>Un espace sécurisé pour suivre le planning, valider les fournitures, consulter les documents et retrouver les visites de chantier.</p>
+              <button class="portal-button" data-open-login>Tester l’accès client</button>
+            </div>
+            <div class="mockup">
+              <div class="mock-window">
+                <div class="mock-cover">PORTAL PROJET</div>
+                <div class="mock-body">
+                  <h3>Planning du projet</h3>
+                  <div class="mock-cards">
+                    <div><b>APS</b><br />Concept en validation</div>
+                    <div><b>Fournitures</b><br />8 choix à valider</div>
+                    <div><b>Chantier</b><br />PV No 5 publié</div>
+                  </div>
+                </div>
+              </div>
+              <div class="mock-window">
+                <div class="mock-body">
+                  <h3>Liste des fournitures</h3>
+                  <div class="mock-cards">
+                    <div><b>Canapé</b><br /><span class="status warn">À valider</span></div>
+                    <div><b>Table</b><br /><span class="status">Approuvé</span></div>
+                    <div><b>Suspension</b><br /><span class="status">Sélectionné</span></div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <section class="contact-band" id="contact">
+          <div class="contact-inner">
+            <div>
+              <h4>un projet ? Contactons-nous :</h4>
+              <h2><a href="tel:+33650787111">06 50 78 71 11</a></h2>
+              <p><a href="mailto:esprit.design.eg@gmail.com">esprit.design.eg@gmail.com</a></p>
+            </div>
+            <form class="form" id="contactForm">
+              <div class="notice" id="formNotice">Demande enregistrée dans cette démo. En production, elle partirait vers WordPress/CRM.</div>
+              <input required name="name" placeholder="Votre nom" />
+              <input required type="email" name="email" placeholder="Votre email" />
+              <select name="type">
+                <option>Projet de rénovation</option>
+                <option>Conception 3D</option>
+                <option>Décoration d’intérieur</option>
+                <option>Accès portail client</option>
+              </select>
+              <textarea required name="message" rows="5" placeholder="Votre message"></textarea>
+              <button type="submit">Envoyer</button>
+            </form>
+          </div>
+        </section>
+      </main>
+
+      <footer class="footer">
+        <div class="footer-inner">
+          <span>Copyright © 2026 – Esprit Design Architecture</span>
+          <span>L’agence · Prestations · Réalisations · Contact · Portail projet</span>
+        </div>
+      </footer>
+    </div>
+
+    <div class="modal" id="loginModal" aria-hidden="true">
+      <div class="login-card">
+        <div class="login-art">
+          <h2>Votre projet, suivi avec clarté.</h2>
+        </div>
+        <form class="login-form" id="loginForm">
+          <h2>Connexion privée</h2>
+          <p>Choisissez l'espace à tester : portail client ou back-office agence.</p>
+          <label>
+            Profil
+            <select id="role">
+              <option value="client">Client - portail projet</option>
+              <option value="admin">Agence - back-office / cockpit projets</option>
+            </select>
+          </label>
+          <label>
+            Email
+            <input id="loginEmail" type="email" value="client@demo.fr" />
+          </label>
+          <label>
+            Mot de passe
+            <input type="password" value="demo1234" />
+          </label>
+          <div class="login-actions">
+            <button type="submit">Se connecter</button>
+            <button type="button" class="ghost" id="closeLogin">Fermer</button>
+          </div>
+          <p>Démo uniquement : aucune donnée réelle n’est envoyée.</p>
+        </form>
+      </div>
+    </div>
+
+    <div class="app" id="app">
+      <div class="app-header">
+        <strong id="appTitle">Portail projet</strong>
+        <div>
+          <button class="dash-button ghost" id="quickNewProject" data-admin-only>+ Projet</button>
+          <button class="dash-button ghost" id="quickInviteClient" data-admin-only>Inviter client</button>
+          <button class="dash-button ghost" id="quickExport" data-admin-only>Exporter</button>
+          <button class="dash-button ghost" id="backSite">Retour site</button>
+          <button class="dash-button" id="logout">Déconnexion</button>
+        </div>
+      </div>
+      <div class="app-layout">
+        <aside class="sidebar" id="sidebar"></aside>
+        <main class="app-main">
+          <div class="project-context" id="projectContext">
+            <div>
+              <strong id="activeProjectLabel">Projet London</strong>
+              <span id="activeProjectMeta">Espace projet actif : budget, achats, documents et chantier filtrés.</span>
+            </div>
+            <select id="activeProjectSelect" aria-label="Projet actif"></select>
+          </div>
+          <section class="dash-section active" id="dash-overview">
+            <div class="dash-head">
+              <div>
+                <h1 id="overviewProjectTitle">Projet London</h1>
+                <p id="overviewProjectSubtitle">Aménagement sur-mesure d'un appartement type 1 dans un style moderne industriel.</p>
+              </div>
+              <button class="dash-button" id="addUpdate">Publier une note</button>
+            </div>
+            <div class="client-only-note" id="roleNotice">Espace client : uniquement les informations publiées par l'agence sont visibles ici.</div>
+            <div class="admin-strip" id="adminStrip">
+              <button class="control-button" type="button" data-admin-action="Nouveau projet créé" data-goto="dash-projects">Nouveau projet<span>Créer une fiche projet et l'ajouter au cockpit.</span></button>
+              <button class="control-button" type="button" data-admin-action="Invitation client préparée" data-goto="dash-admin">Inviter un client<span>Créer un accès privé et envoyer le lien sécurisé.</span></button>
+              <button class="control-button" type="button" data-admin-action="Relance validations envoyée" data-goto="dash-selections">Relancer achats<span>Demander une décision sur les fournitures en attente.</span></button>
+              <button class="control-button" type="button" data-admin-action="Rapport projet exporté" data-goto="dash-documents">Exporter rapport<span>Générer un résumé projet pour le client.</span></button>
+            </div>
+            <div class="quick-actions">
+              <button class="quick-action" type="button" data-goto="dash-budget" data-admin-only>
+                <strong>Budget</strong>
+                <span>Voir les écarts et arbitrer les lots.</span>
+              </button>
+              <button class="quick-action" type="button" data-goto="dash-selections">
+                <strong>Achats</strong>
+                <span>Valider les fournitures prioritaires.</span>
+              </button>
+              <button class="quick-action" type="button" data-goto="dash-site">
+                <strong>Chantier</strong>
+                <span>Consulter ou publier une anomalie.</span>
+              </button>
+              <button class="quick-action" type="button" data-goto="dash-documents">
+                <strong>Documents</strong>
+                <span>Retrouver les plans et comptes rendus.</span>
+              </button>
+            </div>
+            <div class="kpi-grid">
+              <div class="kpi"><b id="kpiProgress">52%</b><span>Avancement global</span></div>
+              <div class="kpi"><b id="kpiBudget">19 700 €</b><span>Budget validé</span></div>
+              <div class="kpi"><b id="kpiPending">3</b><span>Achats à valider</span></div>
+              <div class="kpi"><b id="kpiPhase">Brief</b><span>Phase active</span></div>
+            </div>
+            <div class="dash-card gantt-card" data-admin-only>
+              <h3>Gantt global projets</h3>
+              <div class="gantt" id="gantt"></div>
+            </div>
+            <div class="dash-grid">
+              <div class="dash-card">
+                <h3>Pipeline projet</h3>
+                <div class="phase-selector" id="phaseSelector"></div>
+                <div class="phase-board" id="phaseBoard"></div>
+              </div>
+              <div class="dash-card">
+                <h3>Journal client</h3>
+                <div class="feed" id="clientFeed">
+                  <div class="feed-item"><strong>Projet London</strong><br />Le brief d'aménagement type 1 et l'ambiance moderne industrielle sont disponibles.</div>
+                  <div class="feed-item"><strong>À valider</strong><br />Merci de confirmer le cahier d'ambiance et les premières références mobilier.</div>
+                </div>
+              </div>
+            </div>
+          </section>
+
+          <section class="dash-section" id="dash-brief">
+            <div class="dash-head">
+              <div>
+                <h1>Brief client & APS</h1>
+                <p>Cadrage du projet, attentes, contraintes, arbitrages et validation de l'avant-projet sommaire.</p>
+              </div>
+              <button class="dash-button" id="saveBrief">Enregistrer le brief</button>
+            </div>
+            <div class="dash-grid">
+              <form class="dash-card tool-form" id="briefForm">
+                <label>Objectif du projet<textarea rows="4">Rénover le rez-de-chaussée, améliorer la circulation et créer une ambiance chaleureuse, contemporaine et fonctionnelle.</textarea></label>
+                <label>Contraintes<textarea rows="4">Respecter l'enveloppe budgétaire, conserver le parquet existant dans le salon, intégrer plus de rangements.</textarea></label>
+                <label>Style recherché<select><option>Contemporain chaleureux</option><option>Minimaliste</option><option>Haussmannien modernisé</option></select></label>
+                <label>Budget cible<input type="number" id="briefBudget" value="25000" /></label>
+              </form>
+              <div class="dash-card">
+                <h3>Validation APS</h3>
+                <div class="timeline">
+                  <div class="timeline-item"><b>Brief reçu</b><br />Besoins et contraintes centralisés.</div>
+                  <div class="timeline-item"><b>Concept APS</b><br />Moodboard, esquisse, zoning et enveloppe budgétaire.</div>
+                  <div class="timeline-item"><b>Go APD</b><br />Validation client attendue pour passer aux plans détaillés.</div>
+                </div>
+              </div>
+            </div>
+          </section>
+
+          <section class="dash-section" id="dash-budget">
+            <div class="dash-head">
+              <div>
+                <h1 id="budgetTitle">Budget · Projet London</h1>
+                <p id="budgetSubtitle">Enveloppe, dépenses engagées, reste disponible et alertes de dépassement.</p>
+              </div>
+              <button class="dash-button" id="addBudgetLine">Ajouter une ligne</button>
+            </div>
+            <div class="budget-board" id="budgetBoard"></div>
+            <div class="dash-card" style="margin-top:16px">
+              <table class="dash-table" id="budgetTable">
+                <thead><tr><th>Lot</th><th>Prévu</th><th>Engagé</th><th>Écart</th><th>Statut</th><th>Contrôles</th></tr></thead>
+                <tbody></tbody>
+              </table>
+            </div>
+          </section>
+
+          <section class="dash-section" id="dash-admin">
+            <div class="dash-head">
+              <div>
+                <h1>Fonctions admin</h1>
+                <p>Espace réservé à l'agence : documents internes, publication client, images, comptes rendus et réglages projet.</p>
+              </div>
+            </div>
+            <div class="control-grid">
+              <button class="control-button" type="button" data-admin-action="Projet London dupliqué comme modèle">Dupliquer modèle<span>Créer un nouveau projet depuis la structure Projet London.</span></button>
+              <button class="control-button" type="button" data-admin-action="Lien client sécurisé généré">Générer lien client<span>Créer un lien d'invitation au portail privé.</span></button>
+              <button class="control-button" type="button" data-admin-action="Phase APS clôturée">Clôturer phase APS<span>Verrouiller le brief et passer en APD.</span></button>
+              <button class="control-button" type="button" data-admin-action="Relance budget envoyée">Relancer budget<span>Informer le client d'un arbitrage budgétaire.</span></button>
+              <button class="control-button" type="button" data-admin-action="Backup documents lancé">Backup documents<span>Sauvegarder les plans, factures et comptes rendus.</span></button>
+              <button class="control-button" type="button" data-admin-action="Vue client prévisualisée" data-goto="dash-overview">Prévisualiser client<span>Contrôler ce que le client verra avant publication.</span></button>
+              <button class="control-button" type="button" data-admin-action="Export comptable préparé">Export comptable<span>Préparer honoraires, achats et factures.</span></button>
+              <button class="control-button" type="button" data-admin-action="Projet archivé">Archiver projet<span>Passer le projet livré en archive agence.</span></button>
+            </div>
+            <div class="ai-grid" style="margin-bottom:16px">
+              <div class="ai-panel">
+                <h3>Assistant IA agence</h3>
+                <form class="tool-form" id="agencyAiForm">
+                  <label>Action demandée<select id="agencyAiAction"><option>Prioriser ma semaine</option><option>Détecter les risques projets</option><option>Préparer un message client</option><option>Créer une checklist chantier</option></select></label>
+                  <button class="dash-button" type="submit">Lancer l'assistant</button>
+                </form>
+                <div class="ai-output" id="agencyAiOutput"></div>
+              </div>
+              <div class="ai-panel">
+                <h3>Données Esprit Design</h3>
+                <div class="feed">
+                  <div class="feed-item"><strong>Prestations</strong><br />Conception & rendu 3D, aménagement & décoration, gestion de projet et supervision des travaux.</div>
+                  <div class="feed-item"><strong>Étapes</strong><br />Définition du besoin, étude & devis, conception, suivi de chantier.</div>
+                </div>
+              </div>
+            </div>
+            <div class="admin-grid">
+              <div class="admin-card">
+                <h3>Ajouter un document</h3>
+                <form class="tool-form" id="documentForm">
+                  <label>Titre<input id="documentTitle" value="Compte rendu APS" /></label>
+                  <label>Type<select id="documentType"><option>Plan</option><option>Rendu 3D</option><option>Compte rendu</option><option>Facture</option><option>Document interne</option></select></label>
+                  <label>Visibilité<select id="documentVisibility"><option value="client">Visible client</option><option value="admin">Interne agence</option></select></label>
+                  <button class="dash-button" type="submit">Ajouter</button>
+                </form>
+              </div>
+              <div class="admin-card">
+                <h3>Analyse IA document</h3>
+                <form class="tool-form" id="invoiceForm">
+                  <label>Facture ou devis<input id="invoiceFile" type="file" accept=".txt,.csv,.pdf,.jpg,.jpeg,.png" /></label>
+                  <label>Projet<select id="invoiceProject"><option>Projet London</option></select></label>
+                  <button class="dash-button" type="submit">Analyser et intégrer</button>
+                </form>
+                <div class="analysis-result" id="analysisResult"></div>
+              </div>
+              <div class="admin-card">
+                <h3>Tester une image</h3>
+                <form class="tool-form" id="imageForm">
+                  <label>Image<input id="adminImage" type="file" accept="image/*" /></label>
+                  <div class="image-preview" id="adminImagePreview">Prévisualisation image</div>
+                </form>
+              </div>
+              <div class="admin-card">
+                <h3>Publication client</h3>
+                <form class="tool-form" id="publishForm">
+                  <label>Message<textarea id="publishText" rows="5">Le dossier APS est prêt. Merci de valider les premiers choix d'ambiance et les achats prioritaires.</textarea></label>
+                  <button class="dash-button" type="submit">Envoyer au client</button>
+                </form>
+              </div>
+            </div>
+          </section>
+
+          <section class="dash-section" id="dash-projects">
+            <div class="dash-head">
+              <div>
+                <h1>Tous les projets</h1>
+                <p>Vue agence avec priorités, santé, prochaines actions et budgets.</p>
+              </div>
+              <select id="projectFilter">
+                <option value="all">Tous</option>
+                <option value="risk">À surveiller</option>
+                <option value="ok">OK</option>
+              </select>
+            </div>
+            <div class="dash-card">
+              <table class="dash-table" id="projectTable">
+                <thead><tr><th>Projet</th><th>Phase</th><th>Santé</th><th>Prochaine action</th><th>Budget</th><th>Contrôles</th></tr></thead>
+                <tbody></tbody>
+              </table>
+            </div>
+          </section>
+
+          <section class="dash-section" id="dash-project-detail">
+            <div class="dash-head">
+              <div>
+                <h1 id="projectDetailTitle">Projet</h1>
+                <p id="projectDetailSubtitle">Fiche projet complète.</p>
+              </div>
+              <div class="action-row">
+                <button class="dash-button" id="aiProjectBrief">Synthèse IA</button>
+                <button class="dash-button ghost" id="publishProjectSummary">Publier au client</button>
+              </div>
+            </div>
+            <div class="project-hero"><img id="projectDetailImage" src="" alt="Projet sélectionné" /></div>
+            <div class="detail-grid">
+              <div class="dash-card">
+                <h3>Dossier projet</h3>
+                <div id="projectDetailBody"></div>
+                <div class="checklist" id="projectChecklist"></div>
+              </div>
+              <div class="ai-panel">
+                <h3>Assistant IA projet</h3>
+                <form class="tool-form" id="projectAiForm">
+                  <label>Demande IA<textarea id="projectAiPrompt" rows="5">Prépare les prochaines actions, les risques et les décisions à demander au client.</textarea></label>
+                  <button class="dash-button" type="submit">Générer</button>
+                </form>
+                <div class="ai-output" id="projectAiOutput"></div>
+              </div>
+            </div>
+          </section>
+
+          <section class="dash-section" id="dash-selections">
+            <div class="dash-head">
+              <div>
+                <h1 id="purchasesTitle">Achats · Projet London</h1>
+                <p id="purchasesSubtitle">Validation des achats, statuts fournisseurs, prix et décisions client du projet actif.</p>
+              </div>
+            </div>
+            <div class="product-grid" id="products"></div>
+          </section>
+
+          <section class="dash-section" id="dash-site">
+            <div class="dash-head">
+              <div>
+                <h1 id="siteTitle">Chantier · Projet London</h1>
+                <p id="siteSubtitle">Photos d'anomalies, commentaires, priorités et publication vers l'espace client du projet actif.</p>
+              </div>
+            </div>
+            <div class="meeting-grid">
+              <form class="dash-card tool-form" id="meetingForm">
+                <label>Photo chantier<input id="sitePhoto" type="file" accept="image/*" capture="environment" /></label>
+                <div class="image-preview" id="sitePreview">Photo de l'anomalie</div>
+                <label>Type<select id="siteType"><option>Anomalie</option><option>Décision à prendre</option><option>Avancement</option><option>Réserve livraison</option></select></label>
+                <label>Commentaire<textarea id="siteComment" rows="5">Pose parquet à reprendre près de la baie vitrée. Joint irrégulier à contrôler avant validation.</textarea></label>
+                <label>Priorité<select id="sitePriority"><option>À suivre</option><option>Urgent</option><option>Pour information</option></select></label>
+                <button class="dash-button" type="submit">Publier sur l'espace client</button>
+              </form>
+              <div class="dash-card" style="grid-column: span 2">
+                <h3>Compte rendu chantier partagé</h3>
+                <div class="feed" id="siteFeed"></div>
+              </div>
+            </div>
+          </section>
+
+          <section class="dash-section" id="dash-documents">
+            <div class="dash-head">
+              <div>
+                <h1 id="documentsTitle">Documents · Projet London</h1>
+                <p id="documentsSubtitle">Plans, rendus, factures et comptes rendus du projet actif.</p>
+              </div>
+            </div>
+            <div class="dash-card">
+              <table class="dash-table" id="documentTable">
+                <thead><tr><th>Document</th><th>Type</th><th>Date</th><th>Visibilité</th><th>Actions</th></tr></thead>
+                <tbody></tbody>
+              </table>
+            </div>
+          </section>
+        </main>
+      </div>
+    </div>
+
+    <script>
+      const menu = document.querySelector("#menu");
+      document.querySelector("#mobileToggle").addEventListener("click", () => menu.classList.toggle("open"));
+
+      const modal = document.querySelector("#loginModal");
+      const website = document.querySelector("#website");
+      const app = document.querySelector("#app");
+      const sidebar = document.querySelector("#sidebar");
+      const appTitle = document.querySelector("#appTitle");
+
+      document.querySelectorAll("[data-open-login]").forEach((button) => {
+        button.addEventListener("click", () => {
+          modal.classList.add("show");
+          document.body.classList.add("locked");
+        });
+      });
+      document.querySelector("#closeLogin").addEventListener("click", closeModal);
+      modal.addEventListener("click", (event) => {
+        if (event.target === modal) closeModal();
+      });
+      function closeModal() {
+        modal.classList.remove("show");
+        document.body.classList.remove("locked");
+      }
+
+      let activeRole = "client";
+      let sitePhotoData = "";
+      let activeProjectName = "Projet London";
+      let currentProject = null;
+
+      const navItems = {
+        client: [
+          ["dash-overview", "Vue projet"],
+          ["dash-selections", "Achats à valider"],
+          ["dash-site", "Réunions chantier"],
+          ["dash-documents", "Documents partagés"]
+        ],
+        admin: [
+          ["dash-projects", "Cockpit projets"],
+          ["dash-overview", "Projet London"],
+          ["dash-brief", "Brief & APS"],
+          ["dash-budget", "Budget"],
+          ["dash-selections", "Achats"],
+          ["dash-site", "Chantier"],
+          ["dash-documents", "Documents"],
+          ["dash-admin", "Admin"]
+        ]
+      };
+
+      const phases = [
+        { name: "Brief", progress: 100, status: "Validé", detail: "Besoins, contraintes, inspiration, budget cible." },
+        { name: "APS", progress: 72, status: "En cours", detail: "Concept, zoning, moodboard, première enveloppe." },
+        { name: "APD", progress: 24, status: "À venir", detail: "Plans détaillés, choix matériaux, estimations affinées." },
+        { name: "DCE", progress: 0, status: "À venir", detail: "Dossier entreprises, consultation, devis." },
+        { name: "Chantier", progress: 0, status: "À venir", detail: "Visites, anomalies, comptes rendus, arbitrages." },
+        { name: "Livraison", progress: 0, status: "À venir", detail: "Réserves, levées, documents finaux." }
+      ];
+
+      const budgetLines = [
+        { project: "Projet London", lot: "Mobilier", planned: 8200, spent: 6468 },
+        { project: "Projet London", lot: "Luminaire", planned: 2400, spent: 1880 },
+        { project: "Projet London", lot: "Menuiserie", planned: 3300, spent: 900 },
+        { project: "Projet London", lot: "Décoration", planned: 2800, spent: 1160 },
+        { project: "Projet London", lot: "Honoraires", planned: 3000, spent: 1500 },
+        { project: "Projet Foch", lot: "Mobilier", planned: 14200, spent: 9000 },
+        { project: "Projet Dardanelles", lot: "Menuiserie", planned: 7200, spent: 8100 }
+      ];
+
+      const documents = [
+        { project: "Projet London", title: "Moodboard industriel", type: "Rendu 3D", date: "26/04/2026", visibility: "client" },
+        { project: "Projet London", title: "Plan type 1 - zoning", type: "Plan", date: "27/04/2026", visibility: "client" },
+        { project: "Projet London", title: "Facture mobilier London", type: "Facture", date: "28/04/2026", visibility: "admin" },
+        { project: "Projet Foch", title: "Comparatif devis entreprises", type: "Document interne", date: "28/04/2026", visibility: "admin" }
+      ];
+
+      const siteReports = [
+        { project: "Projet London", type: "Décision à prendre", priority: "À suivre", comment: "Valider l'implantation du mobilier modulable avant passage en APS.", image: "https://images.unsplash.com/photo-1503387762-592deb58ef4e?q=80&w=900&auto=format&fit=crop" },
+        { project: "Projet London", type: "Avancement", priority: "Pour information", comment: "Le cahier d'ambiance moderne industriel est prêt pour validation client.", image: "https://images.unsplash.com/photo-1504307651254-35680f356dfd?q=80&w=900&auto=format&fit=crop" },
+        { project: "Projet Dardanelles", type: "Anomalie", priority: "Urgent", comment: "Réserves à contrôler dans le studio 9 m².", image: "https://images.unsplash.com/photo-1503387762-592deb58ef4e?q=80&w=900&auto=format&fit=crop" }
+      ];
+
+      const fallbackInvoiceItems = [
+        { name: "Canapé Martina", category: "Mobilier", price: 3265, supplier: "AM.PM" },
+        { name: "Suspension Uliar", category: "Luminaire", price: 63.5, supplier: "Maison Sarah Lavoine" },
+        { name: "Table basse Pirita", category: "Mobilier", price: 669, supplier: "Kave Home" }
+      ];
+
+      document.querySelector("#loginForm").addEventListener("submit", (event) => {
+        event.preventDefault();
+        activeRole = document.querySelector("#role").value;
+        closeModal();
+        website.style.display = "none";
+        app.classList.add("show");
+        appTitle.textContent = activeRole === "admin" ? "Cockpit agence" : "Portail client";
+        document.querySelector("#roleNotice").textContent = activeRole === "admin"
+          ? "Cockpit agence : vous voyez aussi les modules internes, documents privés et actions de publication."
+          : "Espace client : uniquement les informations publiées par l'agence sont visibles ici.";
+        document.querySelector("#addUpdate").style.display = activeRole === "admin" ? "" : "none";
+        document.querySelector("#meetingForm").style.display = activeRole === "admin" ? "" : "none";
+        document.querySelector("#adminStrip").classList.toggle("show", activeRole === "admin");
+        document.querySelectorAll("[data-admin-only]").forEach((item) => {
+          item.style.display = activeRole === "admin" ? "" : "none";
+        });
+        renderSidebar(activeRole);
+        renderProjectOptions();
+        activeProjectName = activeRole === "client" ? clientProjectName : getActiveProject().name;
+        syncProjectContext();
+        syncProjectOverview();
+        showSection(activeRole === "admin" ? "dash-projects" : "dash-overview");
+        renderProjects("all");
+        renderPhases(getActiveProject().phase);
+        renderGantt();
+        renderBudget();
+        renderProducts();
+        renderDocuments();
+        renderSiteReports();
+      });
+
+      document.querySelector("#backSite").addEventListener("click", () => {
+        app.classList.remove("show");
+        website.style.display = "";
+      });
+      document.querySelector("#logout").addEventListener("click", () => {
+        app.classList.remove("show");
+        website.style.display = "";
+      });
+
+      document.querySelector("#activeProjectSelect").addEventListener("change", (event) => {
+        setActiveProject(event.target.value);
+      });
+
+      function renderSidebar(role) {
+        sidebar.innerHTML = "";
+        navItems[role].forEach(([id, label]) => {
+          const button = document.createElement("button");
+          button.textContent = label;
+          button.dataset.section = id;
+          button.addEventListener("click", () => showSection(id));
+          sidebar.appendChild(button);
+        });
+      }
+
+      function showSection(id) {
+        syncProjectContext();
+        document.querySelectorAll(".dash-section").forEach((section) => section.classList.remove("active"));
+        document.querySelector(`#${id}`).classList.add("active");
+        document.querySelectorAll(".sidebar button").forEach((button) => {
+          button.classList.toggle("active", button.dataset.section === id);
+        });
+      }
+
+      document.querySelectorAll("[data-goto]").forEach((button) => {
+        button.addEventListener("click", () => showSection(button.dataset.goto));
+      });
+
+      function addAdminLog(message, publishToClient = false) {
+        const item = document.createElement("div");
+        item.className = "feed-item";
+        item.innerHTML = `<strong>${publishToClient ? "Publication client" : "Action admin"}</strong><br />${message}`;
+        document.querySelector("#clientFeed").prepend(item);
+      }
+
+      function runAdminAction(message, target, publishToClient = false) {
+        addAdminLog(message, publishToClient);
+        if (target) showSection(target);
+      }
+
+      function escapeHtml(value) {
+        return String(value)
+          .replaceAll("&", "&amp;")
+          .replaceAll("<", "&lt;")
+          .replaceAll(">", "&gt;")
+          .replaceAll('"', "&quot;")
+          .replaceAll("'", "&#039;");
+      }
+
+      function aiContext(extra = {}) {
+        return {
+          agency: "Esprit Design Architecture",
+          services: ["Conception & rendu 3D", "Aménagement & décoration", "Gestion de projet et accompagnement esthétique des travaux"],
+          phases: phases.map((phase) => phase.name),
+          projects,
+          products,
+          budgetLines,
+          documents,
+          siteReports,
+          ...extra
+        };
+      }
+
+      async function callAi(prompt, context = {}) {
+        const response = await fetch("/api/ai", {
+          method: "POST",
+          headers: { "content-type": "application/json" },
+          body: JSON.stringify({ prompt, context: aiContext(context) })
+        });
+        const data = await response.json();
+        if (!response.ok) throw new Error(data.error || "Erreur IA.");
+        return data;
+      }
+
+      function renderAiResult(target, title, text, mode) {
+        target.innerHTML = `
+          <div class="feed-item">
+            <strong>${title} · ${mode === "openai" ? "IA connectée" : "mode démo"}</strong><br />
+            ${escapeHtml(text).replace(/\n/g, "<br />")}
+          </div>
+        `;
+      }
+
+      document.querySelectorAll("[data-admin-action]").forEach((button) => {
+        button.addEventListener("click", () => runAdminAction(button.dataset.adminAction, button.dataset.goto));
+      });
+
+      document.querySelector("#quickNewProject").addEventListener("click", () => {
+        projects.unshift({ name: `Nouveau projet ${projects.length + 1}`, phase: "Brief", health: "risk", action: "Compléter brief client", budget: "0", gantt: [20, 0, 0, 0, 0, 0], image: "https://www.esprit-design-architecture.com/wp-content/uploads/2024/12/Sans-titre-700-x-600-px.png", description: "Nouveau dossier projet créé depuis le back-office.", location: "À définir", mission: "Définition du besoin" });
+        renderProjects(document.querySelector("#projectFilter").value);
+        renderGantt();
+        renderProjectOptions();
+        runAdminAction("Nouveau projet ajouté au cockpit.", "dash-projects");
+      });
+      document.querySelector("#quickInviteClient").addEventListener("click", () => runAdminAction("Invitation client générée pour Projet London.", "dash-admin"));
+      document.querySelector("#quickExport").addEventListener("click", () => runAdminAction("Export PDF projet préparé dans les documents.", "dash-documents"));
+
+      const clientProjectName = "Projet London";
+
+      const projects = [
+        { name: "Projet Lévis", phase: "Chantier", health: "ok", action: "Contrôler mobilier modulable", budget: "54 000", gantt: [100, 100, 100, 82, 64, 12], image: "https://esprit-design-architecture.fr/wp-content/uploads/2024/12/Design-sans-titre-47.png", description: "Rénovation d'un appartement haussmannien de 54 m² dans le 17e arrondissement, avec conservation de l'âme du lieu et création d'un espace moderne, fonctionnel et modulable.", location: "Paris 17e", mission: "Rénovation complète" },
+        { name: "Projet Plumier", phase: "APD", health: "ok", action: "Valider plan deux chambres", budget: "38 500", gantt: [100, 100, 66, 18, 0, 0], image: "https://esprit-design-architecture.fr/wp-content/uploads/2024/12/Design-sans-titre-37.png", description: "Rénovation complète d'un appartement ancien pour créer un logement confortable comprenant deux chambres.", location: "Paris", mission: "Rénovation appartement ancien" },
+        { name: "Projet Perché", phase: "APS", health: "risk", action: "Arbitrer optimisation studio", budget: "21 800", gantt: [100, 76, 20, 0, 0, 0], image: "https://esprit-design-architecture.fr/wp-content/uploads/2024/12/Design-sans-titre-38.png", description: "Aménagement sur mesure d'un studio provençal afin d'optimiser l'espace et d'en faire un lieu de vie fonctionnel et harmonieux.", location: "Provence", mission: "Aménagement sur mesure" },
+        { name: "Projet Goron", phase: "APD", health: "ok", action: "Finaliser plans 3D", budget: "29 600", gantt: [100, 100, 58, 0, 0, 0], image: "https://esprit-design-architecture.fr/wp-content/uploads/2024/12/Design-sans-titre-39.png", description: "Agencement, aménagement et conception de plans 3D pour un intérieur chaleureux et fonctionnel.", location: "France", mission: "Plans 3D et agencement" },
+        { name: "Projet Foch", phase: "DCE", health: "risk", action: "Comparer devis entreprises", budget: "46 200", gantt: [100, 100, 100, 42, 0, 0], image: "https://esprit-design-architecture.fr/wp-content/uploads/2024/12/Design-sans-titre-41.png", description: "Transformation complète d'un logement une chambre en un espace de vie confortable et contemporain.", location: "Paris", mission: "Transformation logement" },
+        { name: "Projet Estang", phase: "APS", health: "ok", action: "Publier visualisation 3D", budget: "12 400", gantt: [100, 88, 10, 0, 0, 0], image: "https://esprit-design-architecture.fr/wp-content/uploads/2024/12/Design-sans-titre-47.png", description: "Création d'une visualisation 3D détaillée pour sublimer les volumes, les matériaux et les jeux de lumière d'une pièce d'appartement dans le Lot.", location: "Lot", mission: "Visualisation 3D" },
+        { name: "Projet London", phase: "Brief", health: "ok", action: "Compléter cahier d'ambiance", budget: "19 700", gantt: [52, 0, 0, 0, 0, 0], image: "https://esprit-design-architecture.fr/wp-content/uploads/2024/12/Design-sans-titre-42.png", description: "Aménagement sur-mesure d'un appartement type 1 dans un style moderne industriel, alliant fonctionnalité et esthétique contemporaine.", location: "London", mission: "Aménagement sur mesure" },
+        { name: "Projet Bali", phase: "Livraison", health: "ok", action: "Archiver dossier client", budget: "14 900", gantt: [100, 100, 100, 100, 100, 86], image: "https://esprit-design-architecture.fr/wp-content/uploads/2024/12/Design-sans-titre-43.png", description: "Décoration d'un logement destiné à la location saisonnière avec un aménagement coup de cœur à petit budget.", location: "Location saisonnière", mission: "Décoration petit budget" },
+        { name: "Projet Dardanelles", phase: "Chantier", health: "risk", action: "Suivre réserves studio 9 m²", budget: "24 300", gantt: [100, 100, 100, 90, 72, 0], image: "https://esprit-design-architecture.fr/wp-content/uploads/2024/12/Design-sans-titre-48.png", description: "Rénovation totale d'une chambre de bonne de 9 m² dans le 17e arrondissement destinée à la location.", location: "Paris 17e", mission: "Rénovation totale" },
+        { name: "Projet Pinchinats", phase: "DCE", health: "ok", action: "Valider devis cuisine", budget: "33 500", gantt: [100, 100, 82, 36, 0, 0], image: "https://esprit-design-architecture.fr/wp-content/uploads/2024/12/Design-sans-titre-41.png", description: "Rénovation complète d'une cuisine des années 70 en une cuisine moderne et fonctionnelle.", location: "Aix-en-Provence", mission: "Rénovation cuisine" }
+      ];
+
+      function formatEuro(value) {
+        return `${value.toLocaleString("fr-FR")} €`;
+      }
+
+      function renderGantt() {
+        const gantt = document.querySelector("#gantt");
+        if (!gantt) return;
+        gantt.innerHTML = `
+          <div class="gantt-head">
+            <span>Projet</span>
+            ${phases.map((phase) => `<span>${phase.name}</span>`).join("")}
+          </div>
+        `;
+        projects.forEach((project) => {
+          const row = document.createElement("div");
+          row.className = "gantt-row";
+          const values = project.gantt || [30, 0, 0, 0, 0, 0];
+          row.innerHTML = `
+            <div class="gantt-project">${project.name}</div>
+            ${values.map((value, index) => `
+              <div class="gantt-cell">
+                ${value ? `<div class="gantt-bar ${project.health === "risk" && phases[index].name === project.phase ? "warn" : ""}" style="width:${value}%">${value}%</div>` : ""}
+              </div>
+            `).join("")}
+          `;
+          gantt.appendChild(row);
+        });
+      }
+
+      function renderProjectOptions() {
+        const select = document.querySelector("#invoiceProject");
+        const activeSelect = document.querySelector("#activeProjectSelect");
+        const options = projects.map((project) => `<option ${project.name === activeProjectName ? "selected" : ""}>${project.name}</option>`).join("");
+        if (select) select.innerHTML = options;
+        if (activeSelect) activeSelect.innerHTML = options;
+      }
+
+      function getClientProject() {
+        return projects.find((project) => project.name === clientProjectName) || projects[0];
+      }
+
+      function getActiveProject() {
+        return projects.find((project) => project.name === activeProjectName) || getClientProject();
+      }
+
+      function projectBudgetLines() {
+        return budgetLines.filter((line) => line.project === activeProjectName);
+      }
+
+      function projectProducts() {
+        return products.filter((product) => product.project === activeProjectName);
+      }
+
+      function projectDocuments() {
+        return documents.filter((documentItem) => documentItem.project === activeProjectName);
+      }
+
+      function projectReports() {
+        return siteReports.filter((report) => report.project === activeProjectName);
+      }
+
+      function syncProjectContext() {
+        const project = getActiveProject();
+        const meta = `${project.mission} · ${project.location} · phase ${project.phase}`;
+        document.querySelector("#activeProjectLabel").textContent = project.name;
+        document.querySelector("#activeProjectMeta").textContent = `Projet actif : ${meta}`;
+        document.querySelector("#budgetTitle").textContent = `Budget · ${project.name}`;
+        document.querySelector("#budgetSubtitle").textContent = `Enveloppe, dépenses et arbitrages rattachés à ${project.name}.`;
+        document.querySelector("#purchasesTitle").textContent = `Achats · ${project.name}`;
+        document.querySelector("#purchasesSubtitle").textContent = `Fournitures et validations du projet ${project.name}.`;
+        document.querySelector("#siteTitle").textContent = `Chantier · ${project.name}`;
+        document.querySelector("#siteSubtitle").textContent = `Comptes rendus, photos et anomalies du projet ${project.name}.`;
+        document.querySelector("#documentsTitle").textContent = `Documents · ${project.name}`;
+        document.querySelector("#documentsSubtitle").textContent = `Plans, factures et livrables du projet ${project.name}.`;
+        const overviewButton = [...document.querySelectorAll(".sidebar button")].find((button) => button.dataset.section === "dash-overview");
+        if (overviewButton) overviewButton.textContent = project.name;
+        const activeSelect = document.querySelector("#activeProjectSelect");
+        if (activeSelect) activeSelect.value = project.name;
+      }
+
+      function setActiveProject(name) {
+        activeProjectName = name;
+        syncProjectContext();
+        syncProjectOverview();
+        renderPhases(getActiveProject().phase);
+        renderBudget();
+        renderProducts();
+        renderDocuments();
+        renderSiteReports();
+        currentProject = getActiveProject();
+      }
+
+      function syncProjectOverview() {
+        const project = getActiveProject();
+        if (!project) return;
+        const currentPhaseIndex = phases.findIndex((phase) => phase.name === project.phase);
+        const progress = project.gantt?.[Math.max(currentPhaseIndex, 0)] || project.gantt?.[0] || 0;
+        document.querySelector("#overviewProjectTitle").textContent = project.name;
+        document.querySelector("#overviewProjectSubtitle").textContent = project.description;
+        document.querySelector("#kpiProgress").textContent = `${progress}%`;
+        const activeBudget = projectBudgetLines().reduce((sum, line) => sum + line.planned, 0);
+        document.querySelector("#kpiBudget").textContent = activeBudget ? formatEuro(activeBudget) : `${project.budget} €`;
+        document.querySelector("#kpiPhase").textContent = project.phase;
+      }
+
+      function renderProjectDetail(project) {
+        activeProjectName = project.name;
+        syncProjectContext();
+        renderProjectOptions();
+        renderBudget();
+        renderProducts();
+        renderDocuments();
+        renderSiteReports();
+        currentProject = project;
+        document.querySelector("#projectDetailTitle").textContent = project.name;
+        document.querySelector("#projectDetailSubtitle").textContent = `${project.mission} · ${project.location} · phase ${project.phase}`;
+        document.querySelector("#projectDetailImage").src = project.image;
+        document.querySelector("#projectDetailBody").innerHTML = `
+          <p><strong>Description</strong><br />${project.description}</p>
+          <p><strong>Mission</strong><br />${project.mission}</p>
+          <p><strong>Budget</strong><br />${project.budget} €</p>
+          <p><strong>Action prioritaire</strong><br />${project.action}</p>
+          <div class="phase-selector">
+            <button type="button" data-detail-action="Phase ${project.phase} mise à jour">Mettre à jour phase</button>
+            <button type="button" data-detail-action="Compte rendu créé pour ${project.name}">Créer CR</button>
+            <button type="button" data-detail-action="Demande de validation envoyée au client pour ${project.name}">Demander validation</button>
+          </div>
+        `;
+        const checklist = [
+          "Brief client complet et budget confirmé",
+          "Plans 2D / 3D publiés selon la mission",
+          "Achats prioritaires contrôlés",
+          "Documents client à jour",
+          "Prochaine action planifiée"
+        ];
+        document.querySelector("#projectChecklist").innerHTML = checklist.map((item, index) => `
+          <label><input type="checkbox" ${index < 2 ? "checked" : ""} />${item}</label>
+        `).join("");
+        document.querySelectorAll("[data-detail-action]").forEach((button) => {
+          button.addEventListener("click", () => addAdminLog(button.dataset.detailAction, button.textContent.includes("validation")));
+        });
+        generateProjectAi(project, "Synthèse initiale");
+        showSection("dash-project-detail");
+      }
+
+      async function generateProjectAi(project, prompt) {
+        const output = document.querySelector("#projectAiOutput");
+        output.innerHTML = '<div class="feed-item"><strong>IA</strong><br />Analyse en cours...</div>';
+        try {
+          const result = await callAi(prompt, { project });
+          renderAiResult(output, "Synthèse projet", result.text, result.mode);
+        } catch (error) {
+          renderAiResult(output, "Erreur IA", error.message, "demo");
+        }
+      }
+
+      function renderPhases(active) {
+        const selector = document.querySelector("#phaseSelector");
+        const board = document.querySelector("#phaseBoard");
+        selector.innerHTML = "";
+        board.innerHTML = "";
+        phases.forEach((phase) => {
+          const button = document.createElement("button");
+          button.textContent = phase.name;
+          button.classList.toggle("active", phase.name === active);
+          button.addEventListener("click", () => renderPhases(phase.name));
+          selector.appendChild(button);
+        });
+        phases
+          .filter((phase) => activeRole === "admin" || ["Brief", "APS", "APD", "Chantier", "Livraison"].includes(phase.name))
+          .forEach((phase) => {
+            const card = document.createElement("article");
+            card.className = "phase-card";
+            card.innerHTML = `
+              <strong>${phase.name}</strong>
+              <span class="status ${phase.status === "En cours" ? "warn" : ""}">${phase.status}</span>
+              <div class="progress-track"><span style="width:${phase.progress}%"></span></div>
+              <p>${phase.detail}</p>
+            `;
+            board.appendChild(card);
+          });
+      }
+
+      function renderBudget() {
+        const lines = projectBudgetLines();
+        const totalPlanned = lines.reduce((sum, line) => sum + line.planned, 0);
+        const totalSpent = lines.reduce((sum, line) => sum + line.spent, 0);
+        document.querySelector("#kpiBudget").textContent = formatEuro(totalPlanned);
+        const board = document.querySelector("#budgetBoard");
+        board.innerHTML = `
+          <div class="budget-line"><strong>${formatEuro(totalPlanned)}</strong><span>Budget prévisionnel</span><output>Base APS validée</output></div>
+          <div class="budget-line"><strong>${formatEuro(totalSpent)}</strong><span>Dépenses engagées</span><output>${totalPlanned ? Math.round((totalSpent / totalPlanned) * 100) : 0}% consommé</output></div>
+          <div class="budget-line"><strong>${formatEuro(totalPlanned - totalSpent)}</strong><span>Reste disponible</span><output>${totalSpent > totalPlanned ? "Dépassement à arbitrer" : "Sous contrôle"}</output></div>
+        `;
+        const tbody = document.querySelector("#budgetTable tbody");
+        tbody.innerHTML = "";
+        lines.forEach((line) => {
+          const diff = line.planned - line.spent;
+          const row = document.createElement("tr");
+          row.innerHTML = `
+            <td>${line.lot}</td>
+            <td>${formatEuro(line.planned)}</td>
+            <td>${formatEuro(line.spent)}</td>
+            <td>${formatEuro(diff)}</td>
+            <td><span class="status ${diff < 0 ? "danger" : ""}">${diff < 0 ? "Dépassement" : "OK"}</span></td>
+            <td>
+              <div class="action-row">
+                <button class="mini-button" type="button" data-budget-action="Arbitrage demandé sur ${line.lot}">Arbitrer</button>
+                <button class="mini-button" type="button" data-budget-action="${line.lot} publié au client">Publier</button>
+                <button class="mini-button" type="button" data-budget-action="${line.lot} marqué payé">Payé</button>
+              </div>
+            </td>
+          `;
+          tbody.appendChild(row);
+        });
+        document.querySelectorAll("[data-budget-action]").forEach((button) => {
+          button.addEventListener("click", () => runAdminAction(button.dataset.budgetAction, null, button.textContent === "Publier"));
+        });
+      }
+
+      function renderProjects(filter) {
+        const tbody = document.querySelector("#projectTable tbody");
+        if (!tbody) return;
+        tbody.innerHTML = "";
+        projects
+          .filter((project) => filter === "all" || project.health === filter)
+          .forEach((project) => {
+            const row = document.createElement("tr");
+            row.innerHTML = `
+              <td>${project.name}</td>
+              <td>${project.phase}</td>
+              <td><span class="status ${project.health === "risk" ? "warn" : ""}">${project.health === "risk" ? "À surveiller" : "OK"}</span></td>
+              <td>${project.action}</td>
+              <td>${project.budget} €</td>
+              <td>
+                <div class="action-row">
+                  <button class="mini-button" type="button" data-open-project="${project.name}">Ouvrir</button>
+                  <button class="mini-button" type="button" data-project-action="Relance envoyée pour ${project.name}">Relancer</button>
+                  <button class="mini-button" type="button" data-project-action="Note publiée au client pour ${project.name}">Publier</button>
+                </div>
+              </td>
+            `;
+            tbody.appendChild(row);
+          });
+        document.querySelectorAll("[data-project-action]").forEach((button) => {
+          button.addEventListener("click", () => runAdminAction(button.dataset.projectAction, button.dataset.target, button.textContent === "Publier"));
+        });
+        document.querySelectorAll("[data-open-project]").forEach((button) => {
+          button.addEventListener("click", () => {
+            const project = projects.find((item) => item.name === button.dataset.openProject);
+            if (project) renderProjectDetail(project);
+          });
+        });
+      }
+
+      document.querySelector("#projectFilter").addEventListener("change", (event) => renderProjects(event.target.value));
+
+      const products = [
+        { project: "Projet London", name: "Table basse Pirita", category: "Mobilier", price: "669 €", status: "À valider", supplier: "Kave Home", image: "https://images.unsplash.com/photo-1532372320572-cda25653a694?q=80&w=500&auto=format&fit=crop" },
+        { project: "Projet London", name: "Chaise Nebai", category: "Mobilier", price: "329 €", status: "Sélectionné", supplier: "Kave Home", image: "https://images.unsplash.com/photo-1519947486511-46149fa0a254?q=80&w=500&auto=format&fit=crop" },
+        { project: "Projet London", name: "Table Litto", category: "Mobilier", price: "1470 €", status: "Approuvé", supplier: "Kave Home", image: "https://images.unsplash.com/photo-1567538096630-e0c55bd6374c?q=80&w=500&auto=format&fit=crop" },
+        { project: "Projet London", name: "Suspension Uliar", category: "Luminaire", price: "63,5 €", status: "À valider", supplier: "Maison Sarah Lavoine", image: "https://images.unsplash.com/photo-1513506003901-1e6a229e2d15?q=80&w=500&auto=format&fit=crop" },
+        { project: "Projet London", name: "Canapé Martina", category: "Mobilier", price: "3265 €", status: "À valider", supplier: "AM.PM", image: "https://images.unsplash.com/photo-1555041469-a586c61ea9bc?q=80&w=500&auto=format&fit=crop" },
+        { project: "Projet Foch", name: "Carrelage grand format", category: "Décoration", price: "2200 €", status: "À valider", supplier: "Porcelanosa", image: "https://images.unsplash.com/photo-1618220179428-22790b461013?q=80&w=500&auto=format&fit=crop" }
+      ];
+
+      function renderProducts() {
+        const grid = document.querySelector("#products");
+        grid.innerHTML = "";
+        projectProducts().forEach((product) => {
+          const card = document.createElement("article");
+          card.className = "product-card";
+          card.innerHTML = `
+            <img src="${product.image}" alt="${product.name}" />
+            <div>
+              <strong>${product.name}</strong><br />
+              <span>${product.category} · ${product.price}</span><br />
+              <small>${product.supplier}</small><br />
+              <span class="status ${product.status === "À valider" ? "warn" : ""}">${product.status}</span>
+              <div class="action-row">
+                <button type="button" data-buy>${activeRole === "admin" ? "Acheté" : "Valider"}</button>
+                ${activeRole === "admin" ? '<button type="button" data-client>Demander validation</button><button type="button" data-reject>Retirer</button>' : '<button type="button" data-reject>Refuser</button>'}
+              </div>
+            </div>
+          `;
+          card.querySelector("[data-buy]").addEventListener("click", (event) => {
+            const status = card.querySelector(".status");
+            product.status = activeRole === "admin" ? "Acheté" : "Approuvé";
+            status.textContent = product.status;
+            status.className = "status";
+            event.target.textContent = activeRole === "admin" ? "Achat enregistré" : "Validé";
+            event.target.disabled = true;
+            addAdminLog(`${product.name} : ${product.status}.`, activeRole !== "admin");
+            renderProducts();
+          });
+          const askClient = card.querySelector("[data-client]");
+          if (askClient) {
+            askClient.addEventListener("click", () => {
+              product.status = "À valider";
+              addAdminLog(`${product.name} envoyé au client pour validation.`, true);
+              renderProducts();
+            });
+          }
+          card.querySelector("[data-reject]").addEventListener("click", () => {
+            product.status = activeRole === "admin" ? "Retiré" : "Refusé";
+            addAdminLog(`${product.name} : ${product.status}.`, activeRole !== "admin");
+            renderProducts();
+          });
+          grid.appendChild(card);
+        });
+        document.querySelector("#kpiPending").textContent = projectProducts().filter((product) => product.status === "À valider").length;
+      }
+
+      document.querySelector("#addUpdate").addEventListener("click", () => {
+        const item = document.createElement("div");
+        item.className = "feed-item";
+        item.innerHTML = "<strong>Nouvelle note publiée</strong><br />Le client a été informé de l'avancement.";
+        document.querySelector("#clientFeed").prepend(item);
+      });
+
+      document.querySelector("#saveBrief").addEventListener("click", () => {
+        const budget = Number(document.querySelector("#briefBudget").value || 0);
+        document.querySelector("#kpiBudget").textContent = formatEuro(budget);
+        alert("Brief APS enregistré dans cette démo.");
+      });
+
+      document.querySelector("#addBudgetLine").addEventListener("click", () => {
+        budgetLines.push({ project: activeProjectName, lot: "Nouveau lot", planned: 1200, spent: 0 });
+        renderBudget();
+      });
+
+      function renderDocuments() {
+        const tbody = document.querySelector("#documentTable tbody");
+        tbody.innerHTML = "";
+        documents
+          .filter((documentItem) => documentItem.project === activeProjectName)
+          .filter((documentItem) => activeRole === "admin" || documentItem.visibility === "client")
+          .forEach((documentItem) => {
+            const row = document.createElement("tr");
+            row.innerHTML = `
+              <td>${documentItem.title}</td>
+              <td>${documentItem.type}</td>
+              <td>${documentItem.date}</td>
+              <td>${documentItem.visibility === "client" ? "Client" : "Interne agence"}</td>
+              <td>
+                <div class="action-row">
+                  <button class="mini-button" type="button" data-doc-action="Ouverture du document ${documentItem.title}">Ouvrir</button>
+                  ${activeRole === "admin" ? `<button class="mini-button" type="button" data-doc-publish="${documentItem.title}">Publier</button><button class="mini-button" type="button" data-doc-action="${documentItem.title} archivé">Archiver</button>` : ""}
+                </div>
+              </td>
+            `;
+            tbody.appendChild(row);
+          });
+        document.querySelectorAll("[data-doc-action]").forEach((button) => {
+          button.addEventListener("click", () => runAdminAction(button.dataset.docAction));
+        });
+        document.querySelectorAll("[data-doc-publish]").forEach((button) => {
+          button.addEventListener("click", () => runAdminAction(`${button.dataset.docPublish} publié au client.`, null, true));
+        });
+      }
+
+      document.querySelector("#documentForm").addEventListener("submit", (event) => {
+        event.preventDefault();
+        const type = document.querySelector("#documentType").value;
+        documents.unshift({
+          project: activeProjectName,
+          title: document.querySelector("#documentTitle").value,
+          type,
+          date: "26/04/2026",
+          visibility: document.querySelector("#documentVisibility").value
+        });
+        renderDocuments();
+        if (type === "Facture") {
+          analyzeInvoiceText("", document.querySelector("#documentTitle").value);
+        }
+        alert("Document ajouté à la démo.");
+      });
+
+      function parseAmount(value) {
+        return Number(String(value).replace(/\s/g, "").replace(",", ".").replace(/[^\d.]/g, "")) || 0;
+      }
+
+      function inferCategory(text) {
+        const normalized = text.toLowerCase();
+        if (normalized.includes("suspension") || normalized.includes("luminaire") || normalized.includes("lampe")) return "Luminaire";
+        if (normalized.includes("menuiserie") || normalized.includes("placard") || normalized.includes("dressing")) return "Menuiserie";
+        if (normalized.includes("peinture") || normalized.includes("vase") || normalized.includes("tapis") || normalized.includes("rideau")) return "Décoration";
+        return "Mobilier";
+      }
+
+      function extractInvoiceItems(text) {
+        const lines = text.split(/\n|;/).map((line) => line.trim()).filter(Boolean);
+        const extracted = lines
+          .map((line) => {
+            const match = line.match(/(.+?)\s+(\d+[\d\s]*(?:[,.]\d{1,2})?)\s*(?:€|eur|euro)?$/i);
+            if (!match) return null;
+            return {
+              name: match[1].replace(/[-:]/g, "").trim(),
+              category: inferCategory(match[1]),
+              price: parseAmount(match[2]),
+              supplier: "Document importé"
+            };
+          })
+          .filter((item) => item && item.name.length > 2 && item.price > 0);
+        return extracted.length ? extracted : fallbackInvoiceItems;
+      }
+
+      function integrateInvoiceItems(items, sourceName) {
+        items.forEach((item) => {
+          products.unshift({
+            project: activeProjectName,
+            name: item.name,
+            category: item.category,
+            price: formatEuro(item.price),
+            status: "Acheté",
+            supplier: item.supplier,
+            image: "https://images.unsplash.com/photo-1618220179428-22790b461013?q=80&w=500&auto=format&fit=crop"
+          });
+          const budgetLine = budgetLines.find((line) => line.project === activeProjectName && line.lot === item.category);
+          if (budgetLine) {
+            budgetLine.spent += item.price;
+          } else {
+            budgetLines.push({ project: activeProjectName, lot: item.category, planned: Math.ceil(item.price * 1.2), spent: item.price });
+          }
+        });
+        documents.unshift({ project: activeProjectName, title: sourceName, type: "Facture analysée", date: "26/04/2026", visibility: "admin" });
+        renderProducts();
+        renderBudget();
+        renderDocuments();
+      }
+
+      function analyzeInvoiceText(text, sourceName = "Facture importée") {
+        const items = extractInvoiceItems(text);
+        integrateInvoiceItems(items, sourceName);
+        const total = items.reduce((sum, item) => sum + item.price, 0);
+        const result = document.querySelector("#analysisResult");
+        result.innerHTML = `
+          <div class="feed-item"><strong>Analyse terminée</strong><br />${items.length} achat(s) détecté(s), ${formatEuro(total)} intégré(s) au budget.</div>
+          ${items.map((item) => `<div class="analysis-line"><span><strong>${item.name}</strong><br />${item.category} · ${item.supplier}</span><b>${formatEuro(item.price)}</b></div>`).join("")}
+        `;
+        addAdminLog(`${sourceName} analysée : ${items.length} achat(s) ajoutés et ${formatEuro(total)} déduit du budget.`);
+      }
+
+      document.querySelector("#invoiceForm").addEventListener("submit", (event) => {
+        event.preventDefault();
+        activeProjectName = document.querySelector("#invoiceProject").value || activeProjectName;
+        syncProjectContext();
+        const file = document.querySelector("#invoiceFile").files[0];
+        if (!file) {
+          analyzeInvoiceText("", "Facture exemple");
+          return;
+        }
+        const reader = new FileReader();
+        reader.addEventListener("load", () => {
+          const canReadText = /text|csv|json|xml/i.test(file.type) || /\.(txt|csv)$/i.test(file.name);
+          analyzeInvoiceText(canReadText ? String(reader.result) : "", file.name);
+        });
+        reader.readAsText(file);
+      });
+
+      document.querySelector("#publishForm").addEventListener("submit", (event) => {
+        event.preventDefault();
+        const item = document.createElement("div");
+        item.className = "feed-item";
+        item.innerHTML = `<strong>Message agence</strong><br />${document.querySelector("#publishText").value}`;
+        document.querySelector("#clientFeed").prepend(item);
+        alert("Message publié dans le journal client.");
+      });
+
+      document.querySelector("#agencyAiForm").addEventListener("submit", async (event) => {
+        event.preventDefault();
+        const action = document.querySelector("#agencyAiAction").value;
+        const output = document.querySelector("#agencyAiOutput");
+        output.innerHTML = '<div class="feed-item"><strong>IA</strong><br />Analyse en cours...</div>';
+        try {
+          const result = await callAi(action);
+          renderAiResult(output, action, result.text, result.mode);
+        } catch (error) {
+          renderAiResult(output, "Erreur IA", error.message, "demo");
+        }
+      });
+
+      document.querySelector("#projectAiForm").addEventListener("submit", (event) => {
+        event.preventDefault();
+        if (currentProject) generateProjectAi(currentProject, document.querySelector("#projectAiPrompt").value);
+      });
+
+      document.querySelector("#aiProjectBrief").addEventListener("click", () => {
+        if (currentProject) generateProjectAi(currentProject, "Génère une synthèse courte pour pilotage agence.");
+      });
+
+      document.querySelector("#publishProjectSummary").addEventListener("click", () => {
+        if (!currentProject) return;
+        addAdminLog(`Synthèse ${currentProject.name} publiée au client : phase ${currentProject.phase}, prochaine action : ${currentProject.action}.`, true);
+      });
+
+      function previewImage(input, target, callback) {
+        const file = input.files && input.files[0];
+        if (!file) return;
+        const reader = new FileReader();
+        reader.addEventListener("load", () => {
+          target.innerHTML = `<img src="${reader.result}" alt="Image ajoutée" />`;
+          if (callback) callback(reader.result);
+        });
+        reader.readAsDataURL(file);
+      }
+
+      document.querySelector("#adminImage").addEventListener("change", (event) => {
+        previewImage(event.target, document.querySelector("#adminImagePreview"));
+      });
+
+      document.querySelector("#sitePhoto").addEventListener("change", (event) => {
+        previewImage(event.target, document.querySelector("#sitePreview"), (data) => {
+          sitePhotoData = data;
+        });
+      });
+
+      function renderSiteReports() {
+        const feed = document.querySelector("#siteFeed");
+        feed.innerHTML = "";
+        projectReports().forEach((report) => {
+          const item = document.createElement("article");
+          item.className = "feed-item";
+          item.innerHTML = `
+            ${report.image ? `<img src="${report.image}" alt="${report.type}" />` : ""}
+            <strong>${report.type}</strong> <span class="status ${report.priority === "Urgent" ? "danger" : "warn"}">${report.priority}</span>
+            <p>${report.comment}</p>
+          `;
+          feed.appendChild(item);
+        });
+      }
+
+      document.querySelector("#meetingForm").addEventListener("submit", (event) => {
+        event.preventDefault();
+        siteReports.unshift({
+          project: activeProjectName,
+          type: document.querySelector("#siteType").value,
+          priority: document.querySelector("#sitePriority").value,
+          comment: document.querySelector("#siteComment").value,
+          image: sitePhotoData || "https://images.unsplash.com/photo-1503387762-592deb58ef4e?q=80&w=900&auto=format&fit=crop"
+        });
+        renderSiteReports();
+        const item = document.createElement("div");
+        item.className = "feed-item";
+        item.innerHTML = `<strong>Compte rendu chantier publié</strong><br />${document.querySelector("#siteComment").value}`;
+        document.querySelector("#clientFeed").prepend(item);
+      });
+
+      document.querySelector("#contactForm").addEventListener("submit", (event) => {
+        event.preventDefault();
+        document.querySelector("#formNotice").classList.add("show");
+        event.target.reset();
+      });
+
+      document.querySelectorAll(".project-card").forEach((card) => {
+        card.addEventListener("click", () => alert(`${card.dataset.project} ouvert dans cette démo.`));
+      });
+    </script>
+  </body>
+</html>
