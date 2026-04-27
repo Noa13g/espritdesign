@@ -255,7 +255,6 @@ input:focus, select:focus, textarea:focus, button:focus-visible { outline: 3px s
 }
 .app-topbar strong { display: block; color: var(--brown); }
 .topbar-actions { display: flex; flex-wrap: wrap; justify-content: flex-end; gap: 8px; }
-.topbar-actions select { width: 260px; }
 .app-shell { display: grid; grid-template-columns: 288px minmax(0, 1fr); min-height: calc(100vh - 72px); }
 .sidebar {
   background: var(--obsidian);
@@ -273,6 +272,11 @@ input:focus, select:focus, textarea:focus, button:focus-visible { outline: 3px s
   text-transform: uppercase;
   letter-spacing: .12em;
 }
+.sidebar-search { display: block; margin: 4px 0 10px; color: var(--cool); font-size: 12px; font-weight: 760; }
+.sidebar-search input { margin-top: 6px; width: 100%; min-height: 38px; background: rgba(244, 235, 228, .14); color: var(--beige); border-color: rgba(244, 235, 228, .28); }
+.mini-list { display: grid; gap: 8px; }
+.mini-list button { text-align: left; justify-content: flex-start; }
+.mini-list span { display: block; color: var(--obsidian); font-size: 13px; opacity: .8; }
 .sidebar button {
   width: 100%;
   border: 0;

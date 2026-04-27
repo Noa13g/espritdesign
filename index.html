@@ -137,7 +137,6 @@
           <span id="roleBadge">Admin</span>
         </div>
         <div class="topbar-actions">
-          <select id="activeProjectSelect" aria-label="Projet actif"></select>
           <button id="printBtn">Exporter / imprimer</button>
           <button id="backToSiteBtn">Site public</button>
           <button id="logoutBtn">Déconnexion</button>
@@ -146,10 +145,10 @@
       <div class="app-shell">
         <aside id="sidebar" class="sidebar"></aside>
         <main class="workspace">
-          <section class="project-context">
+          <section id="projectContext" class="project-context hidden">
             <div>
-              <p class="eyebrow">Projet actif</p>
-              <h1 id="activeProjectTitle">Projet London</h1>
+              <p id="breadcrumb" class="eyebrow">Projets / Projet London</p>
+              <h1 id="projectContextTitle">Projet London</h1>
               <p id="activeProjectMeta"></p>
             </div>
             <div id="visibilityLegend" class="legend"></div>

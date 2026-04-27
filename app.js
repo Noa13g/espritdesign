@@ -11,9 +11,8 @@ const palette = {
 
 const state = {
   role: "public",
-  activeProjectId: "london",
+  activeProjectId: null,
   view: "cockpit",
-  selectedProjectId: "london",
   demoUser: null,
   viewMode: "table",
   clientValidator: "Client London"
@@ -188,14 +187,41 @@ const publicImages = [
   "https://esprit-design-architecture.fr/wp-content/uploads/2024/12/Design-sans-titre-41.png"
 ];
 
-const agencyNav = [
-  { group: "Agence", items: [["cockpit", "Cockpit agence"], ["projects", "Tous les projets"], ["clients", "Clients"], ["prospects", "Prospects simples"], ["templates", "Modèles"], ["settings", "Paramètres"]] },
-  { group: "Projet actif", items: [["overview", "Vue d'ensemble"], ["brief", "Brief & cadrage"], ["contract", "Contrat & honoraires"], ["phases", "Phases projet"], ["moodboards", "Moodboards"], ["visuals", "Plans & rendus 3D"], ["shopping", "Shopping list / sélections"], ["budget", "Budget"], ["quotes", "Devis entreprises"], ["planning", "Planning"], ["decisions", "Décisions client"], ["tasks", "Tâches internes"], ["site", "Suivi chantier"], ["reports", "Comptes rendus"], ["documents", "Documents"], ["messages", "Messages"], ["time", "Temps passé & rentabilité"], ["exports", "Exports PDF"], ["projectSettings", "Paramètres projet"]] }
+const globalNav = [
+  { view: "cockpit", label: "Cockpit" },
+  { view: "projects", label: "Projets" },
+  { view: "clients", label: "Clients" },
+  { view: "prospects", label: "Prospects" },
+  { view: "financeGlobal", label: "Finances" },
+  { view: "planningGlobal", label: "Planning global" },
+  { view: "documentsGlobal", label: "Documents globaux" },
+  { view: "settings", label: "Paramètres" }
 ];
 
-const collaboratorNav = [
-  { group: "Collaborateur", items: [["cockpit", "Mes projets"], ["projects", "Projets assignés"], ["overview", "Vue projet"], ["brief", "Brief"], ["moodboards", "Moodboards"], ["visuals", "Plans & rendus"], ["shopping", "Shopping list"], ["planning", "Planning"], ["decisions", "Décisions"], ["tasks", "Tâches"], ["site", "Chantier"], ["reports", "Comptes rendus"], ["documents", "Documents"], ["messages", "Messages"]] }
+const projectNav = [
+  ["overview", "Vue d'ensemble"],
+  ["brief", "Brief & cadrage"],
+  ["contract", "Contrat & honoraires"],
+  ["phases", "Phases projet"],
+  ["moodboards", "Moodboards"],
+  ["visuals", "Plans & rendus 3D"],
+  ["shopping", "Shopping list / sélections"],
+  ["budget", "Budget"],
+  ["quotes", "Devis entreprises"],
+  ["planning", "Planning"],
+  ["decisions", "Décisions client"],
+  ["tasks", "Tâches internes"],
+  ["site", "Suivi chantier"],
+  ["reports", "Comptes rendus"],
+  ["documents", "Documents"],
+  ["messages", "Messages"],
+  ["time", "Temps passé & rentabilité"],
+  ["exports", "Exports PDF"],
+  ["projectSettings", "Paramètres projet"]
 ];
+
+const collaboratorProjectNav = projectNav.filter(([view]) => !["contract", "budget", "time", "projectSettings"].includes(view));
+const projectViews = new Set(projectNav.map(([view]) => view).concat(["clientHome", "invoices"]));
 
 const clientNav = [
   { group: "Portail client", items: [["clientHome", "Accueil projet"], ["messages", "Messages"], ["decisions", "Mes décisions à valider"], ["brief", "Brief validé"], ["moodboards", "Moodboards"], ["visuals", "Plans & vues 3D"], ["shopping", "Shopping list"], ["budget", "Budget partagé"], ["quotes", "Devis à valider"], ["planning", "Planning"], ["site", "Suivi chantier"], ["reports", "Comptes rendus"], ["documents", "Documents"], ["contract", "Contrat & honoraires"], ["invoices", "Factures & paiements"]] }
@@ -206,6 +232,7 @@ function money(value) {
 }
 
 function byProject(collection, projectId = state.activeProjectId) {
+  if (!projectId) return [];
   return collection.filter((item) => item.projectId === projectId);
 }
 
@@ -214,10 +241,11 @@ function currentRole() {
 }
 
 function currentProject() {
-  return db.projects.find((project) => project.id === state.activeProjectId) || db.projects[0];
+  return db.projects.find((project) => project.id === state.activeProjectId) || null;
 }
 
 function currentClient(project = currentProject()) {
+  if (!project) return null;
   return db.clients.find((client) => client.id === project.clientId);
 }
 
@@ -225,6 +253,10 @@ function visibleProjects() {
   if (state.role === "admin") return db.projects;
   if (state.role === "collaborator") return db.projects.filter((project) => currentRole().projects.includes(project.id));
   return db.projects.filter((project) => project.id === state.activeProjectId);
+}
+
+function hasProjectContext() {
+  return Boolean(state.activeProjectId && currentProject() && projectViews.has(state.view));
 }
 
 function isVisibleClient(item) {
@@ -274,7 +306,7 @@ function login(identifier, password) {
   }
   state.role = user.role;
   state.demoUser = user;
-  state.activeProjectId = user.role === "client" ? user.projectId : "london";
+  state.activeProjectId = user.role === "client" ? user.projectId : null;
   state.view = user.role === "client" ? "clientHome" : "cockpit";
   $("#loginModal").close();
   $("#publicSite").classList.add("hidden");
@@ -285,6 +317,8 @@ function login(identifier, password) {
 function logout() {
   state.role = "public";
   state.demoUser = null;
+  state.activeProjectId = null;
+  state.view = "cockpit";
   $("#app").classList.add("hidden");
   $("#publicSite").classList.remove("hidden");
 }
@@ -293,38 +327,50 @@ function renderApp() {
   const role = currentRole();
   $("#workspaceTitle").textContent = state.role === "client" ? "Portail client" : state.role === "collaborator" ? "Espace collaborateur" : "Cockpit agence";
   $("#roleBadge").textContent = role.label;
-  renderProjectSelect();
   renderSidebar();
   renderProjectContext();
   renderView();
 }
 
-function renderProjectSelect() {
-  const projects = visibleProjects();
-  $("#activeProjectSelect").innerHTML = projects.map((project) => `<option value="${project.id}" ${project.id === state.activeProjectId ? "selected" : ""}>${project.name}</option>`).join("");
-  $("#activeProjectSelect").disabled = state.role === "client";
-}
-
 function renderSidebar() {
-  const groups = state.role === "client" ? clientNav : state.role === "collaborator" ? collaboratorNav : agencyNav;
-  $("#sidebar").innerHTML = groups.map((group) => `
-    <h3>${group.group}</h3>
-    ${group.items.map(([view, label]) => `<button type="button" data-view="${view}" class="${state.view === view ? "active" : ""}">${label}</button>`).join("")}
-  `).join("");
+  if (state.role === "client") {
+    $("#sidebar").innerHTML = clientNav.map((group) => `
+      <h3>${group.group}</h3>
+      ${group.items.map(([view, label]) => `<button type="button" data-view="${view}" class="${state.view === view ? "active" : ""}">${label}</button>`).join("")}
+    `).join("");
+  } else {
+    const project = currentProject();
+    const nav = state.role === "collaborator" ? collaboratorProjectNav : projectNav;
+    $("#sidebar").innerHTML = `
+      <h3>Agence</h3>
+      <label class="sidebar-search">Recherche<input placeholder="Projet, client, document"></label>
+      ${globalNav.map((item) => `<button type="button" data-view="${item.view}" class="${state.view === item.view || (item.view === "projects" && hasProjectContext()) ? "active" : ""}">${item.label}</button>`).join("")}
+      ${hasProjectContext() ? `<h3>Projet / ${project.name.replace("Projet ", "")}</h3>${nav.map(([view, label]) => `<button type="button" data-view="${view}" class="${state.view === view ? "active" : ""}">${label}</button>`).join("")}` : ""}
+    `;
+  }
   $$("[data-view]").forEach((button) => button.addEventListener("click", () => {
     state.view = button.dataset.view;
+    if (state.role !== "client" && !projectViews.has(state.view)) state.activeProjectId = null;
     renderApp();
   }));
 }
 
 function renderProjectContext() {
   const project = currentProject();
+  const context = $("#projectContext");
+  if (!project || (state.role !== "client" && !projectViews.has(state.view))) {
+    context.classList.add("hidden");
+    return;
+  }
+  context.classList.remove("hidden");
   const client = currentClient(project);
-  $("#activeProjectTitle").textContent = project.name;
+  const label = projectNav.find(([view]) => view === state.view)?.[1] || (state.view === "clientHome" ? "Accueil projet" : "Projet");
+  $("#breadcrumb").textContent = state.role === "client" ? `${project.name} / ${label}` : `Projets / ${project.name} / ${label}`;
+  $("#projectContextTitle").textContent = project.name;
   $("#activeProjectMeta").textContent = `${client?.firstName || ""} ${client?.lastName || ""} · ${project.address} · ${project.phase} · ${project.status}`;
   $("#visibilityLegend").innerHTML = state.role === "client"
     ? `${badge("Vue client filtrée", "public")} ${badge(project.householdLogin, "public")}`
-    : `${badge("Projet actif", "public")} ${project.clientAccess ? badge("Accès client actif", "public") : badge("Accès client inactif", "private")}`;
+    : `${badge("Espace projet", "public")} ${project.clientAccess ? badge("Accès client actif", "public") : badge("Accès client inactif", "private")}`;
 }
 
 function renderViewTitle(title, text, actions = "") {
@@ -338,6 +384,9 @@ function renderView() {
     projects: renderProjects,
     clients: renderClients,
     prospects: renderProspects,
+    financeGlobal: renderFinanceGlobal,
+    planningGlobal: renderPlanningGlobal,
+    documentsGlobal: renderDocumentsGlobal,
     templates: renderTemplates,
     settings: renderSettings,
     overview: renderOverview,
@@ -362,7 +411,13 @@ function renderView() {
     projectSettings: renderProjectSettings,
     invoices: renderInvoices
   };
-  const renderer = map[view] || renderOverview;
+  if (state.role !== "client" && projectViews.has(view) && !currentProject()) {
+    state.view = "projects";
+    $("#viewRoot").innerHTML = renderProjects();
+    bindViewActions();
+    return;
+  }
+  const renderer = map[view] || renderCockpit;
   $("#viewRoot").innerHTML = renderer();
   bindViewActions();
 }
@@ -380,8 +435,9 @@ function cockpitMetrics() {
 
 function renderCockpit() {
   const m = cockpitMetrics();
+  const avgProfitability = visibleProjects().map(profitability).filter((p) => p.rate).reduce((sum, p, _, arr) => sum + p.rate / arr.length, 0);
   return `
-    ${renderViewTitle(state.role === "admin" ? "Cockpit agence" : "Mes projets assignés", "Vue globale de l'activité, des alertes, validations et jalons.", `<button data-action="new-project">Créer projet</button><button data-view-jump="planning">Voir Gantt</button>`)}
+    ${renderViewTitle(state.role === "admin" ? "Cockpit agence" : "Mes projets assignés", "Tableau de bord multi-projets : activité, tâches globales, prospects, finances récentes et alertes.", `<button data-action="new-project">Créer projet</button><button data-view-jump="planningGlobal">Voir Gantt global</button><button data-view-jump="projects">Ouvrir projets</button>`)}
     <div class="grid cols-4">
       <div class="kpi"><strong>${m.active}</strong><span>Projets actifs</span></div>
       <div class="kpi"><strong>${m.delayed}</strong><span>Projets à risque</span></div>
@@ -390,14 +446,23 @@ function renderCockpit() {
       <div class="kpi"><strong>${m.reportsToPublish}</strong><span>CR à publier</span></div>
       <div class="kpi"><strong>${m.urgentTasks}</strong><span>Tâches urgentes</span></div>
       <div class="kpi"><strong>${m.weekTime} h</strong><span>Temps saisi</span></div>
-      <div class="kpi"><strong>${profitability(currentProject()).level}</strong><span>Rentabilité projet</span></div>
+      <div class="kpi"><strong>${Math.round(avgProfitability)} €/h</strong><span>Rentabilité moyenne</span></div>
     </div>
     <div class="grid cols-2" style="margin-top:14px">
       <div class="table-card"><h3>Alertes internes</h3>${renderAlerts()}</div>
       <div class="table-card"><h3>Prochains jalons</h3>${renderMilestones()}</div>
     </div>
+    <div class="grid cols-3" style="margin-top:14px">
+      <div class="table-card"><h3>Projets récents</h3>${renderRecentProjects()}</div>
+      <div class="table-card"><h3>Prospects</h3>${renderRecent("Demandes à suivre", db.prospects.slice(0, 3).map((p) => `${p.name} · ${p.status} · ${p.nextAction}`))}</div>
+      <div class="table-card"><h3>Documents financiers récents</h3>${renderRecent("Factures et devis", db.documents.filter((d) => ["Facture", "Devis", "Contrat"].includes(d.type)).map((d) => `${projectName(d.projectId)} · ${d.title}`))}</div>
+    </div>
     <div class="table-card" style="margin-top:14px"><h3>Gantt global multi-projets</h3>${renderGantt()}</div>
   `;
+}
+
+function renderRecentProjects() {
+  return `<div class="mini-list">${visibleProjects().slice(0, 4).map((p) => `<button type="button" data-open-project="${p.id}"><strong>${p.name}</strong><span>${p.phase} · ${p.progress}%</span></button>`).join("")}</div>`;
 }
 
 function renderAlerts() {
@@ -417,7 +482,7 @@ function renderProjects() {
   const rows = visibleProjects().map((p) => {
     const totals = budgetTotals(p.id);
     const profit = profitability(p);
-    return `<tr><td><strong>${p.name}</strong><br>${currentClient(p)?.firstName || ""} ${currentClient(p)?.lastName || ""}</td><td>${p.address}<br>${p.type}</td><td>${p.phase}<br>${statusBadge(p.status)}</td><td>${p.priority}<br>${statusBadge(p.health === "risk" ? "À surveiller" : "OK")}</td><td>${money(totals.planned)}<br>${p.progress}%</td><td>${currentRole().canSeeProfitability ? `${money(p.fees)}<br>${profit.rate} €/h · ${profit.level}` : badge("Masqué", "private")}</td><td>${p.clientAccess ? badge("Actif", "public") : badge("Inactif", "private")}</td><td><button data-open-project="${p.id}">Ouvrir</button><button data-set-project="${p.id}">Actif</button><button data-action="archive-project" data-id="${p.id}">Archiver</button></td></tr>`;
+    return `<tr><td><strong>${p.name}</strong><br>${currentClient(p)?.firstName || ""} ${currentClient(p)?.lastName || ""}</td><td>${p.address}<br>${p.type}</td><td>${p.phase}<br>${statusBadge(p.status)}</td><td>${p.priority}<br>${statusBadge(p.health === "risk" ? "À surveiller" : "OK")}</td><td>${money(totals.planned)}<br>${p.progress}%</td><td>${currentRole().canSeeProfitability ? `${money(p.fees)}<br>${profit.rate} €/h · ${profit.level}` : badge("Masqué", "private")}</td><td>${p.clientAccess ? badge("Actif", "public") : badge("Inactif", "private")}</td><td><button data-open-project="${p.id}">Ouvrir le projet</button><button data-action="archive-project" data-id="${p.id}">Archiver</button></td></tr>`;
   }).join("");
   return `
     ${renderViewTitle("Tous les projets", "Recherche, filtre, tri, vue tableau/cartes et ouverture fiche projet.", `<input id="projectSearch" placeholder="Rechercher un projet" /><button data-action="new-project">Créer projet</button><button data-toggle-project-view>${state.viewMode === "table" ? "Vue cartes" : "Vue tableau"}</button>`)}
@@ -426,7 +491,7 @@ function renderProjects() {
 }
 
 function renderProjectCards() {
-  return `<div class="grid cols-3">${visibleProjects().map((p) => `<article class="card project-card"><img src="${p.image}" alt="${p.name}" /><div><h3>${p.name}</h3><p>${p.description}</p>${statusBadge(p.status)} ${p.clientAccess ? badge("Portail actif", "public") : badge("Portail inactif", "private")}<div class="actions"><button data-open-project="${p.id}">Ouvrir</button><button data-set-project="${p.id}">Projet actif</button></div></div></article>`).join("")}</div>`;
+  return `<div class="grid cols-3">${visibleProjects().map((p) => `<article class="card project-card"><img src="${p.image}" alt="${p.name}" /><div><h3>${p.name}</h3><p>${p.description}</p>${statusBadge(p.status)} ${p.clientAccess ? badge("Portail actif", "public") : badge("Portail inactif", "private")}<div class="actions"><button data-open-project="${p.id}">Ouvrir le projet</button></div></div></article>`).join("")}</div>`;
 }
 
 function renderClients() {
@@ -439,12 +504,38 @@ function renderProspects() {
     <div class="table-card table-wrap"><table><thead><tr><th>Nom</th><th>Contact</th><th>Source</th><th>Type</th><th>Budget</th><th>Délai</th><th>Statut</th><th>Prochaine action</th><th>Notes</th></tr></thead><tbody>${db.prospects.map((p) => `<tr><td>${p.name}</td><td>${p.contact}</td><td>${p.source}</td><td>${p.type}</td><td>${money(p.budget)}</td><td>${p.deadline}</td><td>${statusBadge(p.status)}</td><td>${p.nextAction}</td><td>${p.notes}</td></tr>`).join("")}</tbody></table></div>`;
 }
 
+function renderFinanceGlobal() {
+  const projects = visibleProjects();
+  const rows = projects.map((p) => {
+    const totals = budgetTotals(p.id);
+    const profit = profitability(p);
+    return `<tr><td><button data-open-project="${p.id}">${p.name}</button></td><td>${money(totals.planned)}</td><td>${money(totals.validated)}</td><td>${money(totals.engaged)}</td><td>${money(totals.remaining)}</td><td>${currentRole().canSeeProfitability ? `${profit.rate} €/h · ${profit.level}` : badge("Masqué", "private")}</td><td>${p.clientAccess ? badge("Portail actif", "public") : badge("Portail inactif", "private")}</td></tr>`;
+  }).join("");
+  return `${renderViewTitle("Finances", "Vue globale agence : budgets, engagements, restes disponibles et indicateurs internes.", `<button data-action="new-budget-line">Ajouter ligne globale</button>`)}
+    <div class="table-card table-wrap"><table><thead><tr><th>Projet</th><th>Prévu</th><th>Validé</th><th>Engagé</th><th>Reste</th><th>Rentabilité</th><th>Portail</th></tr></thead><tbody>${rows}</tbody></table></div>`;
+}
+
+function renderPlanningGlobal() {
+  return `${renderViewTitle("Planning global", "Vue multi-projets de l'agence : phases, jalons et alertes de retard.", `<button data-action="new-project">Créer jalon</button>`)}
+    <div class="table-card table-wrap"><h3>Gantt global multi-projets</h3>${renderGantt()}</div>
+    <div class="grid cols-3" style="margin-top:14px">${visibleProjects().map((p) => `<div class="card"><h3>${p.name}</h3>${statusBadge(p.status)}<p>${p.phase}<br>${p.start} → ${p.end}</p><div class="mini-gantt"><i style="width:${p.progress}%"></i></div><button data-open-project="${p.id}">Ouvrir le projet</button></div>`).join("")}</div>`;
+}
+
+function renderDocumentsGlobal() {
+  const projectIds = visibleProjects().map((p) => p.id);
+  const docs = db.documents.filter((d) => projectIds.includes(d.projectId));
+  const rows = docs.map((d) => `<tr><td>${projectName(d.projectId)}</td><td>${d.title}</td><td>${d.type}</td><td>${d.phase}</td><td>${d.file}</td><td>${d.date}</td><td>${statusBadge(d.status)}</td><td>${visibilityBadge(d)}</td><td><button data-open-project="${d.projectId}">Ouvrir projet</button></td></tr>`).join("");
+  return `${renderViewTitle("Documents globaux", "Bibliothèque agence transversale : factures, devis, contrats, plans, rendus et comptes rendus.", `<button data-action="new-document">Ajouter document</button>`)}
+    <div class="table-card table-wrap"><table><thead><tr><th>Projet</th><th>Titre</th><th>Type</th><th>Phase</th><th>Fichier</th><th>Date</th><th>Statut</th><th>Visibilité</th><th>Action</th></tr></thead><tbody>${rows}</tbody></table></div>`;
+}
+
 function renderOverview() {
   const p = currentProject();
+  if (!p) return emptyView("Projet", "Ouvrez un projet depuis la page Projets.");
   const totals = budgetTotals(p.id);
   const decisions = byProject(db.decisions).filter((d) => d.status === "En attente");
   return `
-    ${renderViewTitle(p.name, "Vue d'ensemble du projet actif : budget, décisions, documents, messages et alertes.", `<button data-ai-summary="admin">Résumé IA agence</button><button data-ai-summary="client">Résumé IA client</button><button data-action="publish-overview">Publier synthèse</button>`)}
+    ${renderViewTitle(p.name, "Vue d'ensemble du projet : budget, décisions, documents, messages et alertes.", `<button data-ai-summary="admin">Résumé IA agence</button><button data-ai-summary="client">Résumé IA client</button><button data-action="publish-overview">Publier synthèse</button>`)}
     <div class="grid cols-4">
       <div class="kpi"><strong>${p.progress}%</strong><span>Avancement</span></div>
       <div class="kpi"><strong>${money(totals.planned)}</strong><span>Budget prévu</span></div>
@@ -461,6 +552,7 @@ function renderOverview() {
 
 function renderClientHome() {
   const p = currentProject();
+  if (!p) return emptyView("Portail client", "Aucun projet client n'est rattaché à cette session.");
   const visibleDecisions = byProject(db.decisions).filter((d) => d.status === "En attente");
   return `
     ${renderViewTitle(`Bienvenue dans votre espace ${p.name}`, "Retrouvez ici uniquement les éléments publiés par l'agence.", `<button data-ai-summary="client">Résumé IA de mon projet</button>`)}
@@ -497,7 +589,7 @@ function renderContract() {
 
 function renderPhases() {
   const records = byProject(db.phaseRecords);
-  return `${renderViewTitle("Phases projet", "Timeline, livrables, validations et avancement du projet actif.")}
+  return `${renderViewTitle("Phases projet", "Timeline, livrables, validations et avancement du projet.")}
     <div class="grid cols-3">${db.phases.map((name) => {
       const r = records.find((record) => record.name === name) || { status: "À venir", start: "—", end: "—", progress: 0, deliverables: "À définir", validations: "À définir", internal: "" };
       return `<div class="card"><h3>${name}</h3>${statusBadge(r.status)}<div class="mini-gantt"><i style="width:${r.progress}%"></i></div><p>${r.start} → ${r.end}</p><p><strong>Livrables</strong><br>${r.deliverables}</p><p><strong>Validation</strong><br>${r.validations}</p>${state.role === "admin" ? `<p><strong>Interne</strong><br>${r.internal || "—"}</p>` : ""}</div>`;
@@ -524,7 +616,7 @@ function renderShopping() {
 function renderBudget() {
   const totals = budgetTotals();
   const rows = byProject(db.budgets).filter((b) => state.role !== "client" || b.published).map((b) => `<tr><td>${b.lot}</td><td>${b.room}</td><td>${money(b.planned)}</td><td>${money(b.validated)}</td><td>${money(b.engaged)}</td><td>${money(b.validated - b.engaged)}</td><td>${b.source}</td><td>${b.published ? badge("Publié", "public") : badge("Interne", "private")}</td></tr>`).join("");
-  return `${renderViewTitle(state.role === "client" ? "Budget partagé" : "Budget", "Budget propre au projet actif, relié aux achats, devis et factures analysées.", `<button data-action="new-budget-line">Ajouter ligne</button>`)}
+  return `${renderViewTitle(state.role === "client" ? "Budget partagé" : "Budget", "Budget propre au projet ouvert, relié aux achats, devis et factures analysées.", `<button data-action="new-budget-line">Ajouter ligne</button>`)}
     <div class="grid cols-4"><div class="kpi"><strong>${money(totals.planned)}</strong><span>Prévu</span></div><div class="kpi"><strong>${money(totals.validated)}</strong><span>Validé</span></div><div class="kpi"><strong>${money(totals.engaged)}</strong><span>Engagé</span></div><div class="kpi"><strong>${money(totals.remaining)}</strong><span>Reste</span></div></div>
     <div class="table-card table-wrap" style="margin-top:14px"><table><thead><tr><th>Lot</th><th>Pièce</th><th>Prévu</th><th>Validé</th><th>Engagé</th><th>Reste</th><th>Source</th><th>Publication</th></tr></thead><tbody>${rows}</tbody></table></div>`;
 }
@@ -535,8 +627,7 @@ function renderQuotes() {
 }
 
 function renderPlanning() {
-  return `${renderViewTitle("Planning", "Planning global, planning projet, jalons, Gantt premium et alertes retard.")}
-    <div class="table-card table-wrap"><h3>Gantt global</h3>${renderGantt()}</div>
+  return `${renderViewTitle("Planning", "Planning du projet, jalons, Gantt premium et alertes retard.")}
     <div class="grid cols-3" style="margin-top:14px">${byProject(db.phaseRecords).map((p) => `<div class="card"><h3>${p.name}</h3>${statusBadge(p.status)}<p>${p.start} → ${p.end}</p><div class="mini-gantt"><i style="width:${p.progress}%"></i></div></div>`).join("")}</div>`;
 }
 
@@ -601,7 +692,7 @@ function renderTime() {
 function renderExports() {
   const exports = ["Dossier projet complet", "Brief validé", "Dossier APS", "Dossier APD", "Moodboard PDF", "Shopping list PDF", "Budget PDF", "Compte rendu de visite", "Synthèse devis entreprises", "Dossier de fin de projet"];
   return `${renderViewTitle("Exports PDF", "Vues imprimables premium via window.print() et styles print CSS.")}
-    <div class="grid cols-3">${exports.map((name) => `<div class="card"><h3>${name}</h3><p>Export imprimable du projet actif.</p><button data-action="print-export">Exporter / imprimer</button></div>`).join("")}</div>`;
+    <div class="grid cols-3">${exports.map((name) => `<div class="card"><h3>${name}</h3><p>Export imprimable du projet ouvert.</p><button data-action="print-export">Exporter / imprimer</button></div>`).join("")}</div>`;
 }
 
 function renderProjectSettings() {
@@ -672,8 +763,7 @@ function profitability(project) {
 }
 
 function bindViewActions() {
-  $$("[data-set-project]").forEach((btn) => btn.addEventListener("click", () => setActiveProject(btn.dataset.setProject)));
-  $$("[data-open-project]").forEach((btn) => btn.addEventListener("click", () => { setActiveProject(btn.dataset.openProject); state.view = "overview"; renderApp(); }));
+  $$("[data-open-project]").forEach((btn) => btn.addEventListener("click", () => enterProject(btn.dataset.openProject)));
   $$("[data-view-jump]").forEach((btn) => btn.addEventListener("click", () => { state.view = btn.dataset.viewJump; renderApp(); }));
   $$("[data-toggle-project-view]").forEach((btn) => btn.addEventListener("click", () => { state.viewMode = state.viewMode === "table" ? "cards" : "table"; renderApp(); }));
   $$("[data-action]").forEach((btn) => btn.addEventListener("click", () => handleAction(btn.dataset.action, btn.dataset.id)));
@@ -689,26 +779,27 @@ function bindViewActions() {
   if (createDoc) createDoc.addEventListener("click", createInvoiceDocument);
 }
 
-function setActiveProject(projectId) {
+function enterProject(projectId, view = "overview") {
   if (!visibleProjects().some((p) => p.id === projectId)) return;
   state.activeProjectId = projectId;
+  state.view = view;
   renderApp();
-  toast(`${projectName(projectId)} est maintenant le projet actif.`);
+  toast(`${projectName(projectId)} ouvert.`);
 }
 
 function handleAction(action) {
   const project = currentProject();
   const messages = {
     "new-project": "Projet de démonstration créé.",
-    "archive-project": `${project.name} archivé en mode démo.`,
+    "archive-project": `${project?.name || "Projet"} archivé en mode démo.`,
     "new-client": "Fiche client de démonstration créée.",
     "new-prospect": "Prospect de démonstration ajouté.",
-    "publish-overview": `Synthèse ${project.name} publiée côté client.`,
+    "publish-overview": `Synthèse ${project?.name || "projet"} publiée côté client.`,
     "publish-brief": "Visibilité brief mise à jour en mode démo.",
     "new-moodboard": "Moodboard brouillon créé.",
     "new-product": "Produit de démonstration ajouté à la shopping list.",
     "print-shopping": "Ouverture impression shopping list.",
-    "new-budget-line": "Ligne budget ajoutée au projet actif.",
+    "new-budget-line": project ? "Ligne budget ajoutée au projet." : "Ligne budget globale ajoutée en mode démo.",
     "new-site-point": "Point chantier ajouté en mode démo.",
     "print-report": "Préparation impression compte rendu.",
     "new-document": "Document interne ajouté.",
@@ -874,7 +965,6 @@ function init() {
     event.preventDefault();
     login($("#loginId").value.trim(), $("#loginPassword").value);
   });
-  $("#activeProjectSelect").addEventListener("change", (event) => setActiveProject(event.target.value));
   $("#logoutBtn").addEventListener("click", logout);
   $("#backToSiteBtn").addEventListener("click", () => { $("#app").classList.add("hidden"); $("#publicSite").classList.remove("hidden"); });
   $("#printBtn").addEventListener("click", () => window.print());

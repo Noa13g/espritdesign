@@ -7,7 +7,7 @@ La V2 contient une vitrine fidèle à l'univers public Esprit Design, un cockpit
 ## Objectifs V2
 
 - Centraliser briefs, phases, moodboards, plans, rendus, achats, budgets, devis, documents, chantier et comptes rendus.
-- Piloter tous les projets depuis un cockpit agence avec KPIs, alertes, Gantt global et projet actif.
+- Piloter tous les projets depuis un cockpit agence avec KPIs, alertes, Gantt global et navigation par fiche projet.
 - Offrir un portail client premium, simple et rassurant, avec uniquement les éléments publiés.
 - Tracer les validations client : qui, quoi, quand, version et commentaire.
 - Préparer une base technique extensible vers une vraie authentification, une base de données et du stockage fichiers.
@@ -41,10 +41,10 @@ L'authentification est simulée côté navigateur pour la démonstration. Elle n
 ## Modules Agence
 
 - Cockpit agence avec KPIs, alertes, rentabilité, temps semaine et Gantt multi-projets.
-- Tous les projets : carte et tableau, recherche, filtres visuels, ouverture et sélection du projet actif.
+- Tous les projets : carte et tableau, recherche, filtres visuels et ouverture d'une fiche projet.
 - Clients : coordonnées, préférences, notes internes et historique projets.
 - Prospects simples : demandes entrantes, statut, budget estimé, prochaine action.
-- Projet actif : vue d'ensemble, brief, contrat, phases, moodboards, plans/rendus, shopping list, budget, devis, planning, décisions, tâches internes, suivi chantier, comptes rendus, documents, messages, temps passé, exports et paramètres.
+- Espace projet ouvert : vue d'ensemble, brief, contrat, phases, moodboards, plans/rendus, shopping list, budget, devis, planning, décisions, tâches internes, suivi chantier, comptes rendus, documents, messages, temps passé, exports et paramètres.
 - Administration : utilisateurs, rôles, permissions, accès client, seuils de rentabilité, statuts et charte.
 - Modèles : brief, phases, compte rendu, shopping list, tâches, message client statique et export.
 
@@ -70,9 +70,11 @@ Le client voit uniquement son projet et uniquement les éléments publiés :
 
 Le client ne voit jamais : rentabilité, marges, temps passé, notes internes, tâches internes, documents internes ou données financières stratégiques.
 
-## Projet actif
+## Navigation Projet
 
-La sélection du projet actif pilote réellement les modules suivants :
+Le cockpit est un tableau de bord multi-projets. Pour consulter un projet, il faut passer par `Projets`, puis ouvrir une carte ou une ligne projet. Les menus de projet n'apparaissent qu'une fois une fiche projet ouverte, sous forme de sous-navigation dédiée.
+
+Le projet ouvert pilote les modules suivants :
 
 - budget ;
 - achats ;
@@ -146,7 +148,7 @@ Dans le module Documents :
 - extraction fournisseur, date, total, TVA et lignes ;
 - table de vérification ;
 - bouton pour ajouter les lignes à la shopping list ;
-- imputation au budget du projet actif ;
+- imputation au budget du projet ouvert ;
 - création d'un document facture en mode démo.
 
 Aucune extraction n'est intégrée automatiquement sans validation utilisateur.
@@ -198,8 +200,8 @@ La V2 reste volontairement en HTML/CSS/JS + Node sans dépendances. Ce choix per
 5. Connexion admin.
 6. Connexion collaborateur.
 7. Connexion client London.
-8. Changement projet actif.
-9. Budget, achats, documents et chantier filtrés par projet actif.
+8. Ouverture Projet London puis retour Cockpit.
+9. Budget, achats, documents et chantier filtrés par projet ouvert.
 10. Publication / masquage document côté client.
 11. Validation client avec prénom/commentaire.
 12. Shopping list avec statuts.
