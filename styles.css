@@ -430,8 +430,8 @@ input:focus, select:focus, textarea:focus, button:focus-visible { outline: 3px s
 .grid.cols-3 { grid-template-columns: repeat(3, minmax(0, 1fr)); }
 .grid.cols-4 { grid-template-columns: repeat(4, minmax(0, 1fr)); }
 .full-span { grid-column: 1 / -1; }
-.grid.cols-2.dashboard-focus { align-items: start; grid-template-columns: minmax(560px, 1.25fr) minmax(360px, .75fr); }
-.dashboard-panel { min-height: 360px; overflow: hidden; }
+.dashboard-stack { display: grid; gap: 14px; }
+.dashboard-panel { min-height: 0; overflow: hidden; }
 .dashboard-panel h3 { font-size: 24px; margin-bottom: 18px; }
 .dashboard-strip { margin-top: 14px; }
 .dashboard-strip .kpi { background: rgba(244, 235, 228, 0.78); }
@@ -442,7 +442,7 @@ input:focus, select:focus, textarea:focus, button:focus-visible { outline: 3px s
 table { width: 100%; border-collapse: collapse; min-width: 760px; }
 th, td { padding: 10px 12px; border-bottom: 1px solid var(--line); text-align: left; vertical-align: middle; }
 th { color: var(--obsidian); font-size: 11px; text-transform: uppercase; letter-spacing: .08em; }
-tr:hover td { background: var(--cool); }
+tr.selected-row td { background: rgba(158, 168, 130, .16); }
 .project-card {
   min-height: 220px;
   padding: 0;
@@ -464,13 +464,22 @@ tr:hover td { background: var(--cool); }
 .settings-hero img { width: 72px; height: 72px; object-fit: contain; }
 .settings-hero h3 { margin: 0 0 4px; color: var(--brown); }
 .settings-hero p { margin: 0; }
-.gantt { min-width: 900px; display: grid; gap: 8px; }
-.gantt-head, .gantt-row { display: grid; grid-template-columns: 152px repeat(10, minmax(52px, 1fr)); gap: 6px; align-items: center; }
+.gantt { width: 100%; min-width: 0; display: grid; gap: 8px; }
+.gantt-head, .gantt-row { display: grid; grid-template-columns: 132px repeat(10, minmax(36px, 1fr)); gap: 6px; align-items: center; }
 .gantt-head span { font-size: 9px; text-transform: uppercase; font-weight: 750; color: var(--obsidian); opacity: .72; }
-.gantt-name { font-weight: 850; color: var(--brown); }
+.gantt-name { font-weight: 850; color: var(--brown); font-size: 12px; }
 .gantt-cell { height: 18px; border: 1px solid rgba(112, 107, 117, .16); border-radius: 4px; background: rgba(211, 208, 205, .45); overflow: hidden; }
+.gantt-cell.skipped { background: repeating-linear-gradient(135deg, rgba(112,107,117,.08), rgba(112,107,117,.08) 4px, transparent 4px, transparent 8px); }
 .gantt-bar { height: 100%; display: block; color: transparent; background: var(--moss); font-size: 0; }
 .gantt-bar.warn { background: var(--brown); }
+.planning-cards { margin-top: 16px; }
+.planning-card { display: grid; gap: 13px; align-content: start; }
+.planning-card .mini-gantt { margin: 4px 0 4px; }
+.finance-detail { margin-top: 14px; padding: 18px; border: 1px solid var(--line); border-radius: 12px; background: rgba(244, 235, 228, .66); box-shadow: var(--soft); }
+.finance-detail h3 { margin-top: 0; color: var(--brown); }
+.phase-toggle-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; }
+.phase-toggle-grid label { display: flex; gap: 8px; align-items: center; padding: 10px; border: 1px solid var(--line); border-radius: 10px; background: rgba(255,255,255,.28); }
+.phase-toggle-grid input { width: auto; }
 .image-strip { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; }
 .image-strip img { height: 130px; width: 100%; object-fit: cover; border-radius: 10px; }
 .form-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px; }
@@ -492,7 +501,7 @@ tr:hover td { background: var(--cool); }
   .menu { display: none; grid-column: 1 / -1; justify-content: flex-start; flex-wrap: wrap; padding-bottom: 16px; }
   .menu.open { display: flex; }
   .hero, .split, .portal-section, .quote-band, .contact-band, .app-shell, .project-context, .view-title { grid-template-columns: 1fr; }
-  .service-grid, .gallery, .grid.cols-4, .grid.cols-3, .grid.cols-2, .grid.cols-2.dashboard-focus, .form-grid { grid-template-columns: 1fr 1fr; }
+  .service-grid, .gallery, .grid.cols-4, .grid.cols-3, .grid.cols-2, .form-grid, .phase-toggle-grid { grid-template-columns: 1fr 1fr; }
   .filter-bar { grid-template-columns: 1fr 1fr; }
   .sidebar { flex-direction: row; overflow-x: auto; padding: 10px; }
   .sidebar h3 { display: none; }
@@ -503,7 +512,7 @@ tr:hover td { background: var(--cool); }
 @media (max-width: 680px) {
   .hero { padding-top: 28px; }
   .hero-visual, .hero-visual img { min-height: 420px; height: 420px; }
-  .service-grid, .gallery, .grid.cols-4, .grid.cols-3, .grid.cols-2, .grid.cols-2.dashboard-focus, .filter-bar, .form-grid, .login-grid, .image-strip { grid-template-columns: 1fr; }
+  .service-grid, .gallery, .grid.cols-4, .grid.cols-3, .grid.cols-2, .filter-bar, .form-grid, .phase-toggle-grid, .login-grid, .image-strip { grid-template-columns: 1fr; }
   .section, .hero, .portal-section { width: min(100% - 28px, 1220px); }
   .portal-section, .quote-band, .panel { padding: 24px; }
   .app-topbar { display: grid; grid-template-columns: 1fr; gap: 10px; padding: 10px 12px; }
@@ -517,6 +526,10 @@ tr:hover td { background: var(--cool); }
   .sidebar-search { min-width: 190px; }
   .sidebar button { min-width: 118px; font-size: 11px; padding: 8px; }
   .dashboard-panel { min-height: 0; }
+  .gantt-head, .gantt-row { grid-template-columns: 118px repeat(10, minmax(28px, 1fr)); gap: 4px; }
+  .gantt-head span { font-size: 8px; }
+  .gantt-name { font-size: 11px; }
+  .gantt-cell { height: 16px; }
   .table-actions { align-items: flex-start; }
   .topbar-actions select { width: 100%; }
 }

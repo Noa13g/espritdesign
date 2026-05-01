@@ -18,6 +18,8 @@ const state = {
   previewClient: false,
   clientValidator: "Client London",
   showClientForm: false,
+  financeProjectId: null,
+  editingAccessId: null,
   filters: {
     global: "",
     projects: { query: "", phase: "", status: "", priority: "" },
@@ -79,11 +81,11 @@ const db = {
     { id: "p3", name: "SCI Parrines", contact: "sci@example.fr", source: "Recommandation", type: "Appartement locatif", budget: 32000, deadline: "Fin 2026", status: "Devis envoyé", nextAction: "Relance devis", notes: "Projet intéressant mais arbitrage budget." }
   ],
   projects: [
-    { id: "london", name: "Projet London", clientId: "c-london", clientAccess: true, householdLogin: "PROJET-LONDON", address: "12 King's Road", zip: "SW3", city: "London", type: "Appartement", phase: "Brief", status: "En cours", priority: "Normale", health: "Bonne", start: "2026-04-20", end: "2026-07-15", progress: 52, worksBudget: 8400, furnitureBudget: 11300, fees: 3000, feesBilled: 1200, timeEstimated: 44, image: "https://esprit-design-architecture.fr/wp-content/uploads/2024/12/Design-sans-titre-42.png", description: "Aménagement sur-mesure d'un appartement type 1 dans un style moderne industriel, alliant fonctionnalité et esthétique contemporaine.", publicSummary: "Brief et ambiance moderne industrielle en cours de validation.", assigned: ["collaborator"] },
-    { id: "levis", name: "Projet Lévis", clientId: "c-levis", clientAccess: true, householdLogin: "PROJET-LEVIS", address: "14 rue de Lévis", zip: "75017", city: "Paris", type: "Appartement", phase: "Exécution", status: "En cours", priority: "Haute", health: "Bonne", start: "2026-01-15", end: "2026-06-28", progress: 74, worksBudget: 39000, furnitureBudget: 15000, fees: 7200, feesBilled: 5400, timeEstimated: 82, image: "https://esprit-design-architecture.fr/wp-content/uploads/2024/12/Design-sans-titre-47.png", description: "Rénovation d'un appartement haussmannien de 54 m², conservation de l'âme du lieu et création d'un espace moderne, fonctionnel et modulable.", publicSummary: "Chantier en cours, mobilier modulable en suivi.", assigned: ["collaborator"] },
-    { id: "foch", name: "Projet Foch", clientId: "c-foch", clientAccess: true, householdLogin: "PROJET-FOCH", address: "Avenue Foch", zip: "75116", city: "Paris", type: "Appartement", phase: "DCE", status: "En cours", priority: "Haute", health: "À surveiller", start: "2026-03-01", end: "2026-08-30", progress: 63, worksBudget: 31000, furnitureBudget: 15200, fees: 5200, feesBilled: 2500, timeEstimated: 68, image: "https://esprit-design-architecture.fr/wp-content/uploads/2024/12/Design-sans-titre-41.png", description: "Transformation complète d'un logement une chambre en espace de vie confortable et contemporain.", publicSummary: "Comparaison des devis entreprises en cours.", assigned: ["collaborator"] },
-    { id: "bali", name: "Projet Bali", clientId: "c-bali", clientAccess: false, householdLogin: "PROJET-BALI", address: "Résidence saisonnière", zip: "13100", city: "Aix-en-Provence", type: "Studio", phase: "Livraison", status: "En cours", priority: "Normale", health: "Bonne", start: "2026-02-01", end: "2026-05-03", progress: 92, worksBudget: 3800, furnitureBudget: 11100, fees: 2200, feesBilled: 2200, timeEstimated: 30, image: "https://esprit-design-architecture.fr/wp-content/uploads/2024/12/Design-sans-titre-43.png", description: "Décoration d'un logement destiné à la location saisonnière avec un aménagement coup de coeur à petit budget.", publicSummary: "Livraison presque finalisée.", assigned: [] },
-    { id: "cabries", name: "Projet Cabriès", clientId: "c-cabries", clientAccess: false, householdLogin: "MAISON-CABRIES", address: "Chemin des oliviers", zip: "13480", city: "Cabriès", type: "Maison", phase: "Découverte / RDV initial", status: "À venir", priority: "Basse", health: "À surveiller", start: "2026-05-10", end: "2026-11-20", progress: 12, worksBudget: 48000, furnitureBudget: 18000, fees: 6800, feesBilled: 0, timeEstimated: 75, image: "https://www.esprit-design-architecture.com/wp-content/uploads/2024/12/Sans-titre-700-x-600-px.png", description: "Projet de démonstration pour une maison familiale à Cabriès.", publicSummary: "Dossier découverte en préparation.", assigned: [] }
+    { id: "london", name: "Projet London", clientId: "c-london", clientAccess: true, householdLogin: "PROJET-LONDON", address: "12 King's Road", zip: "SW3", city: "London", type: "Appartement", phase: "Brief", status: "En cours", priority: "Normale", health: "Bonne", start: "2026-04-20", end: "2026-07-15", progress: 52, worksBudget: 8400, furnitureBudget: 11300, fees: 3000, feesBilled: 1200, timeEstimated: 44, skippedPhases: [], image: "https://esprit-design-architecture.fr/wp-content/uploads/2024/12/Design-sans-titre-42.png", description: "Aménagement sur-mesure d'un appartement type 1 dans un style moderne industriel, alliant fonctionnalité et esthétique contemporaine.", publicSummary: "Brief et ambiance moderne industrielle en cours de validation.", assigned: ["collaborator"] },
+    { id: "levis", name: "Projet Lévis", clientId: "c-levis", clientAccess: true, householdLogin: "PROJET-LEVIS", address: "14 rue de Lévis", zip: "75017", city: "Paris", type: "Appartement", phase: "Exécution", status: "En cours", priority: "Haute", health: "Bonne", start: "2026-01-15", end: "2026-06-28", progress: 74, worksBudget: 39000, furnitureBudget: 15000, fees: 7200, feesBilled: 5400, timeEstimated: 82, skippedPhases: ["Livraison"], image: "https://esprit-design-architecture.fr/wp-content/uploads/2024/12/Design-sans-titre-47.png", description: "Rénovation d'un appartement haussmannien de 54 m², conservation de l'âme du lieu et création d'un espace moderne, fonctionnel et modulable.", publicSummary: "Chantier en cours, mobilier modulable en suivi.", assigned: ["collaborator"] },
+    { id: "foch", name: "Projet Foch", clientId: "c-foch", clientAccess: true, householdLogin: "PROJET-FOCH", address: "Avenue Foch", zip: "75116", city: "Paris", type: "Appartement", phase: "DCE", status: "En cours", priority: "Haute", health: "À surveiller", start: "2026-03-01", end: "2026-08-30", progress: 63, worksBudget: 31000, furnitureBudget: 15200, fees: 5200, feesBilled: 2500, timeEstimated: 68, skippedPhases: [], image: "https://esprit-design-architecture.fr/wp-content/uploads/2024/12/Design-sans-titre-41.png", description: "Transformation complète d'un logement une chambre en espace de vie confortable et contemporain.", publicSummary: "Comparaison des devis entreprises en cours.", assigned: ["collaborator"] },
+    { id: "bali", name: "Projet Bali", clientId: "c-bali", clientAccess: false, householdLogin: "PROJET-BALI", address: "Résidence saisonnière", zip: "13100", city: "Aix-en-Provence", type: "Studio", phase: "Livraison", status: "En cours", priority: "Normale", health: "Bonne", start: "2026-02-01", end: "2026-05-03", progress: 92, worksBudget: 3800, furnitureBudget: 11100, fees: 2200, feesBilled: 2200, timeEstimated: 30, skippedPhases: [], image: "https://esprit-design-architecture.fr/wp-content/uploads/2024/12/Design-sans-titre-43.png", description: "Décoration d'un logement destiné à la location saisonnière avec un aménagement coup de coeur à petit budget.", publicSummary: "Livraison presque finalisée.", assigned: [] },
+    { id: "cabries", name: "Projet Cabriès", clientId: "c-cabries", clientAccess: false, householdLogin: "MAISON-CABRIES", address: "Chemin des oliviers", zip: "13480", city: "Cabriès", type: "Maison", phase: "Découverte / RDV initial", status: "À venir", priority: "Basse", health: "À surveiller", start: "2026-05-10", end: "2026-11-20", progress: 12, worksBudget: 48000, furnitureBudget: 18000, fees: 6800, feesBilled: 0, timeEstimated: 75, skippedPhases: ["DCE"], image: "https://www.esprit-design-architecture.com/wp-content/uploads/2024/12/Sans-titre-700-x-600-px.png", description: "Projet de démonstration pour une maison familiale à Cabriès.", publicSummary: "Dossier découverte en préparation.", assigned: [] }
   ],
   phases: [
     "Découverte / RDV initial", "Brief", "APS", "APD", "DCE", "Chiffrage", "Préparation", "Exécution", "Livraison", "Clôture"
@@ -530,7 +532,7 @@ function cockpitMetrics() {
 function renderCockpit() {
   return `
     ${renderViewTitle(state.role === "admin" ? "Dashboard" : "Espace collaborateur", "Vue globale de l'agence : planning multi-projets et suivi financier des honoraires.", `${actionButton("Créer client", 'data-action="new-client"', "compact")}${actionButton("Créer projet", 'data-action="new-project"', "compact")}`)}
-    <div class="grid cols-2 dashboard-focus">
+    <div class="dashboard-stack">
       <div class="table-card dashboard-panel"><h3>Gantt Global</h3>${renderGantt()}</div>
       <div class="table-card dashboard-panel"><h3>Suivi financier</h3>${renderFeesTable()}</div>
     </div>
@@ -614,26 +616,30 @@ function renderProspects() {
 
 function renderFinanceGlobal() {
   const projects = visibleProjects();
+  const selected = projects.find((p) => p.id === state.financeProjectId) || projects[0];
   const rows = projects.map((p) => {
     const totals = budgetTotals(p.id);
     const profit = profitability(p);
-    return `<tr><td><button class="link-action" data-open-project="${p.id}">${p.name}</button></td><td>${money(totals.planned)}</td><td>${money(totals.validated)}</td><td>${money(totals.engaged)}</td><td>${money(totals.remaining)}</td><td>${currentRole().canSeeProfitability ? `${profit.rate} €/h · ${profit.level}` : badge("Masqué", "private")}</td><td>${p.clientAccess ? badge("Portail actif", "public") : badge("Portail inactif", "private")}</td></tr>`;
+    return `<tr class="${state.financeProjectId === p.id ? "selected-row" : ""}"><td><button class="link-action" data-finance-project="${p.id}">${p.name}</button></td><td>${money(totals.planned)}</td><td>${money(totals.validated)}</td><td>${money(totals.engaged)}</td><td>${money(totals.remaining)}</td><td>${currentRole().canSeeProfitability ? `${profit.rate} €/h · ${profit.level}` : badge("Masqué", "private")}</td><td>${p.clientAccess ? badge("Portail actif", "public") : badge("Portail inactif", "private")}</td></tr>`;
   }).join("");
+  const detailTotals = budgetTotals(selected?.id);
+  const detailProfit = selected ? profitability(selected) : { rate: 0, hours: 0, level: "" };
   return `${renderViewTitle("Finances", "Vue globale agence : budgets, engagements, restes disponibles et indicateurs internes.", `<button class="btn-compact" data-action="new-budget-line">Ajouter ligne globale</button>`)}
-    <div class="table-card table-wrap"><table><thead><tr><th>Projet</th><th>Prévu</th><th>Validé</th><th>Engagé</th><th>Reste</th><th>Rentabilité</th><th>Portail</th></tr></thead><tbody>${rows}</tbody></table></div>`;
+    <div class="table-card table-wrap"><table><thead><tr><th>Projet</th><th>Prévu</th><th>Validé</th><th>Engagé</th><th>Reste</th><th>Rentabilité</th><th>Portail</th></tr></thead><tbody>${rows}</tbody></table></div>
+    ${selected ? `<div class="finance-detail"><h3>Détail financier - ${selected.name}</h3><div class="grid cols-4"><div class="metric"><strong>${money(detailTotals.planned)}</strong><span>Budget prévu</span></div><div class="metric"><strong>${money(detailTotals.validated)}</strong><span>Devis signés</span></div><div class="metric"><strong>${money(detailTotals.engaged)}</strong><span>Paiements / engagé</span></div><div class="metric"><strong>${detailProfit.rate} €/h</strong><span>${detailProfit.hours} h suivies · ${detailProfit.level}</span></div></div></div>` : ""}`;
 }
 
 function renderPlanningGlobal() {
   return `${renderViewTitle("Planning global", "Vue multi-projets de l'agence : phases, jalons et alertes de retard.", `<button class="btn-compact" data-action="new-project">Créer jalon</button>`)}
     <div class="table-card table-wrap"><h3>Gantt global multi-projets</h3>${renderGantt()}</div>
-    <div class="grid cols-3" style="margin-top:14px">${visibleProjects().map((p) => `<div class="card"><h3>${p.name}</h3>${statusBadge(p.status)}<p>${p.phase}<br>${p.start} → ${p.end}</p><div class="mini-gantt"><i style="width:${p.progress}%"></i></div><button class="btn-compact" data-open-project="${p.id}">Ouvrir le projet</button></div>`).join("")}</div>`;
+    <div class="grid cols-3 planning-cards">${visibleProjects().map((p) => `<div class="card planning-card"><h3>${p.name}</h3>${statusBadge(p.status)}<p>${p.phase}<br>${p.start} → ${p.end}</p><div class="mini-gantt"><i style="width:${p.progress}%"></i></div><button class="btn-compact" data-open-project="${p.id}">Ouvrir le projet</button></div>`).join("")}</div>`;
 }
 
 function renderDocumentsGlobal() {
   const projectIds = visibleProjects().map((p) => p.id);
   const docs = filteredDocuments(db.documents.filter((d) => projectIds.includes(d.projectId)));
   const rows = docs.map((d) => `<tr><td>${projectName(d.projectId)}</td><td>${d.title}</td><td>${d.type}</td><td>${d.phase}</td><td>${d.file}</td><td>${d.date}</td><td>${statusBadge(d.status === "Publié" ? "Finalisé" : d.status)}</td><td>${visibilityBadge(d)}</td><td class="table-actions">${actionButton("Ouvrir projet", `data-open-project="${d.projectId}"`, "compact")}${moreActions([actionButton("Voir document", 'data-action="view-document"'), actionButton(d.visibleClient ? "Masquer" : "Publier", `data-doc-publish="${d.id}"`, d.visibleClient ? "" : "success"), actionButton("Supprimer", 'data-action="delete-document"', "danger")])}</td></tr>`).join("");
-  return `${renderViewTitle("Documents globaux", "Bibliothèque agence transversale : factures, devis, contrats, plans, rendus et comptes rendus.", `<button class="btn-compact" data-action="new-document">Ajouter document</button>`)}
+  return `${renderViewTitle("Documents", "Bibliothèque agence transversale : factures, devis, contrats, plans, rendus et comptes rendus.", `<button class="btn-compact" data-action="new-document">Ajouter document</button>`)}
     <form class="filter-bar" id="documentFilters"><input name="query" value="${state.filters.documents}" placeholder="Rechercher un document, type, projet ou fichier" /><button type="submit" class="btn-compact">Rechercher</button></form>
     <div class="table-card table-wrap"><table><thead><tr><th>Projet</th><th>Titre</th><th>Type</th><th>Phase</th><th>Fichier</th><th>Date</th><th>Statut</th><th>Visibilité</th><th>Action</th></tr></thead><tbody>${rows || `<tr><td colspan="9"><div class="empty">Aucun document ne correspond à cette recherche.</div></td></tr>`}</tbody></table></div>`;
 }
@@ -809,7 +815,8 @@ function renderProjectSettings() {
   return `${renderViewTitle("Paramètres projet", "Nom, client, statut, accès client, permissions, visibilité et archivage.")}
     <div class="form-grid card">
       <label>Nom projet<input value="${p.name}"></label><label>Adresse<input value="${p.address}"></label><label>Statut<select>${db.settings.statuses.map((s) => `<option ${s === p.status ? "selected" : ""}>${s}</option>`).join("")}</select></label><label>Phase actuelle<select>${db.phases.map((phase) => `<option ${phase === p.phase ? "selected" : ""}>${phase}</option>`).join("")}</select></label><label>Priorité<select><option>${p.priority}</option><option>Haute</option><option>Normale</option><option>Basse</option></select></label><label>Identifiant client<input value="${p.householdLogin}"></label><label>Accès client<select><option>${p.clientAccess ? "Actif" : "Inactif"}</option><option>Actif</option><option>Inactif</option></select></label><label>Image couverture<input value="${p.image}"></label><div class="actions full"><button data-action="reset-client-code">Réinitialiser code</button><button data-action="toggle-client-access">Activer/désactiver accès</button><button data-action="archive-project">Archiver projet</button></div>
-    </div>`;
+    </div>
+    <div class="card" style="margin-top:14px"><h3>Étapes du projet</h3><p>Décochez une étape si elle ne s'applique pas à ce projet. Le planning et le Gantt la masqueront pour ce projet.</p><div class="phase-toggle-grid">${db.phases.map((phase) => `<label><input type="checkbox" data-phase-toggle="${phase}" ${p.skippedPhases?.includes(phase) ? "" : "checked"}> ${phase}</label>`).join("")}</div></div>`;
 }
 
 function renderInvoices() {
@@ -822,14 +829,24 @@ function renderTemplates() {
 }
 
 function renderSettings() {
-  const accessRows = db.accessAccounts.map((u) => `<tr><td><strong>${u.name}</strong><br>${u.identifier}</td><td>${u.role}</td><td>${u.projectId ? projectName(u.projectId) : "Agence"}</td><td>${u.passwordMasked}</td><td>${statusBadge(u.status)}</td><td>${u.permissions}</td><td class="table-actions">${actionButton("Modifier", `data-action="edit-access" data-id="${u.id}"`, "compact")}${moreActions([actionButton("Réinitialiser", `data-action="reset-client-code" data-id="${u.id}"`), actionButton(u.status === "Actif" ? "Désactiver" : "Réactiver", `data-action="${u.status === "Actif" ? "disable-access" : "enable-access"}" data-id="${u.id}"`, u.status === "Actif" ? "danger" : "success")])}</td></tr>`).join("");
+  const accessRows = db.accessAccounts.map((u) => `<tr class="${state.editingAccessId === u.id ? "selected-row" : ""}"><td><strong>${u.name}</strong><br>${u.identifier}</td><td>${u.role}</td><td>${u.projectId ? projectName(u.projectId) : "Agence"}</td><td>${u.passwordMasked}</td><td>${statusBadge(u.status)}</td><td>${u.permissions}</td><td class="table-actions">${actionButton("Modifier", `data-action="edit-access" data-id="${u.id}"`, "compact")}${moreActions([actionButton("Réinitialiser", `data-action="reset-client-code" data-id="${u.id}"`), actionButton(u.status === "Actif" ? "Désactiver" : "Réactiver", `data-action="${u.status === "Actif" ? "disable-access" : "enable-access"}" data-id="${u.id}"`, u.status === "Actif" ? "danger" : "success")])}</td></tr>`).join("");
+  const editedAccess = db.accessAccounts.find((u) => u.id === state.editingAccessId);
   return `${renderViewTitle("Paramètres", "Réglages essentiels : accès, rôles, charte, statuts et seuils.", `${actionButton("Créer utilisateur", 'data-action="new-user"', "compact")}${actionButton("Enregistrer", 'data-action="save-settings"', "compact")}`)}
     <div class="settings-hero">
-      <img src="https://www.esprit-design-architecture.com/wp-content/uploads/2025/01/Design-sans-titre-2025-01-15T143328.321.png" alt="Logo Esprit Design Architecture" />
+      <img src="./assets/esprit-design-logo.png" alt="Logo Esprit Design Architecture" />
       <div><h3>Esprit Design Architecture</h3><p>Portail privé, accès clients et paramètres de démonstration.</p></div>
     </div>
     <div class="grid cols-2">
       <div class="card full-span"><h3>Utilisateurs & accès</h3><div class="table-wrap"><table><thead><tr><th>Identifiant</th><th>Rôle</th><th>Projet lié</th><th>Mot de passe</th><th>Statut</th><th>Permissions</th><th>Actions</th></tr></thead><tbody>${accessRows}</tbody></table></div></div>
+      ${editedAccess ? `<div class="card full-span"><h3>Modifier l'accès</h3><div class="form-grid">
+        <label>Nom<input value="${editedAccess.name}"></label>
+        <label>Identifiant<input value="${editedAccess.identifier}"></label>
+        <label>Rôle<select><option>${editedAccess.role}</option><option>admin</option><option>collaborator</option><option>client</option></select></label>
+        <label>Projet lié<select><option value="">Agence</option>${db.projects.map((p) => `<option value="${p.id}" ${editedAccess.projectId === p.id ? "selected" : ""}>${p.name}</option>`).join("")}</select></label>
+        <label>Statut<select><option>${editedAccess.status}</option><option>Actif</option><option>Inactif</option></select></label>
+        <label>Mot de passe masqué<input value="${editedAccess.passwordMasked}" disabled></label>
+        <label class="full">Permissions<textarea rows="2">${editedAccess.permissions}</textarea></label>
+      </div><div class="actions">${actionButton("Enregistrer les modifications", 'data-action="save-settings"', "success")}${actionButton("Annuler", 'data-action="cancel-edit-access"', "ghost")}</div></div>` : ""}
       <div class="card full-span"><h3>Créer un accès client</h3><div class="form-grid">
         <label>Nom client / foyer<input id="accessName" placeholder="Foyer London"></label>
         <label>Projet rattaché<select id="accessProject">${db.projects.map((p) => `<option value="${p.id}">${p.name}</option>`).join("")}</select></label>
@@ -844,7 +861,7 @@ function renderSettings() {
       <div class="card"><h3>Permissions collaborateur</h3><p>Lecture seule, modification, publication côté client, comptes rendus, shopping list, tâches, budget visible client, documents internes, temps/rentabilité si autorisé.</p>${actionButton("Modifier permissions", 'data-action="edit-permissions"', "compact")}</div>
       <div class="card"><h3>Seuils rentabilité</h3><p>Bonne : ${db.settings.profitability.good} €/h<br>Moyenne : ${db.settings.profitability.medium} €/h<br>Faible : ${db.settings.profitability.weak} €/h<br>Non rentable : sous ${db.settings.profitability.weak} €/h</p></div>
       <div class="card"><h3>Charte</h3><p>Blair TTC / Acumin Variable Concept avec Poppins en alternative web. Aucune police manuscrite n'est utilisée dans le portail.</p>${Object.entries(db.settings.brand).map(([k, v]) => `<span class="badge" style="background:${v};color:var(--beige)">${k} ${v}</span>`).join(" ")}</div>
-      <div class="card"><h3>Statuts éditables</h3><p><strong>Phases</strong><br>${db.phases.join(" · ")}</p><p><strong>Documents</strong><br>Brouillon · Finalisé · Archivé</p><p><strong>Produits</strong><br>Idée interne · Proposé au client · Validé · Refusé · Alternative demandée · À commander · Commandé · Reçu · Installé</p></div>
+      <div class="card"><h3>Référentiels</h3><p><strong>Phases activables par projet</strong><br>${db.phases.join(" · ")}</p><p><strong>Documents</strong><br>Brouillon · Finalisé · Archivé</p><p><strong>Produits</strong><br>Idée interne · Proposé au client · Validé · Refusé · Alternative demandée · À commander · Commandé · Reçu · Installé</p></div>
     </div>`;
 }
 
@@ -864,7 +881,7 @@ function renderGantt() {
   const columns = db.phases;
   return `<div class="gantt"><div class="gantt-head"><span>Projet</span>${columns.map((c) => `<span>${c.split(" ")[0]}</span>`).join("")}</div>${visibleProjects().map((p) => {
     const activeIndex = columns.indexOf(p.phase);
-    return `<div class="gantt-row"><span class="gantt-name">${p.name}</span>${columns.map((phase, index) => `<span class="gantt-cell" title="${phase}">${index <= activeIndex ? `<i class="gantt-bar ${p.health === "À surveiller" && index === activeIndex ? "warn" : ""}" style="width:${index === activeIndex ? p.progress : 100}%"></i>` : ""}</span>`).join("")}</div>`;
+    return `<div class="gantt-row"><span class="gantt-name">${p.name}</span>${columns.map((phase, index) => `<span class="gantt-cell ${p.skippedPhases?.includes(phase) ? "skipped" : ""}" title="${phase}">${p.skippedPhases?.includes(phase) ? "" : index <= activeIndex ? `<i class="gantt-bar ${p.health === "À surveiller" && index === activeIndex ? "warn" : ""}" style="width:${index === activeIndex ? p.progress : 100}%"></i>` : ""}</span>`).join("")}</div>`;
   }).join("")}</div>`;
 }
 
@@ -921,6 +938,8 @@ function bindViewActions() {
   $$("[data-toggle-project-view]").forEach((btn) => btn.addEventListener("click", () => { state.viewMode = state.viewMode === "table" ? "cards" : "table"; renderApp(); }));
   $$("[data-action]").forEach((btn) => btn.addEventListener("click", () => handleAction(btn.dataset.action, btn.dataset.id)));
   $$("[data-doc-publish]").forEach((btn) => btn.addEventListener("click", () => toggleDocument(btn.dataset.docPublish)));
+  $$("[data-finance-project]").forEach((btn) => btn.addEventListener("click", () => { state.financeProjectId = btn.dataset.financeProject; renderApp(); }));
+  $$("[data-phase-toggle]").forEach((input) => input.addEventListener("change", () => toggleProjectPhase(input.dataset.phaseToggle, input.checked)));
   $$("[data-product-status]").forEach((btn) => btn.addEventListener("click", () => setProductStatus(btn.dataset.productStatus, btn.dataset.status)));
   $$("[data-validate]").forEach((btn) => btn.addEventListener("click", () => validateDecision(btn.dataset.validate, btn.dataset.result)));
   $$("[data-ai-summary]").forEach((btn) => btn.addEventListener("click", () => summarizeProject(btn.dataset.aiSummary)));
@@ -930,6 +949,24 @@ function bindViewActions() {
   if (confirm) confirm.addEventListener("click", confirmDocumentAnalysis);
   const createDoc = $("[data-create-invoice-doc]");
   if (createDoc) createDoc.addEventListener("click", createInvoiceDocument);
+}
+
+function closeOpenMenus(event) {
+  if (event.target.closest(".more-actions")) return;
+  $$(".more-actions[open]").forEach((menu) => menu.removeAttribute("open"));
+}
+
+function toggleProjectPhase(phase, enabled) {
+  const project = currentProject();
+  if (!project) return;
+  project.skippedPhases = project.skippedPhases || [];
+  if (enabled) {
+    project.skippedPhases = project.skippedPhases.filter((item) => item !== phase);
+  } else if (!project.skippedPhases.includes(phase)) {
+    project.skippedPhases.push(phase);
+  }
+  toast(enabled ? `${phase} réactivée pour ${project.name}.` : `${phase} sautée pour ${project.name}.`);
+  renderApp();
 }
 
 function enterProject(projectId, view = "overview") {
@@ -960,9 +997,20 @@ function confirmDeleteProject(projectId) {
   }
 }
 
-function handleAction(action) {
+function handleAction(action, id) {
   const project = currentProject();
   if (action === "create-client-access") return createClientAccess();
+  if (action === "cancel-edit-access") {
+    state.editingAccessId = null;
+    renderApp();
+    return;
+  }
+  if (action === "edit-access") {
+    state.editingAccessId = id || null;
+    renderApp();
+    toast("Formulaire d'édition de l'accès ouvert.");
+    return;
+  }
   if (action === "new-client") {
     state.activeProjectId = null;
     state.previewClient = false;
@@ -1008,7 +1056,6 @@ function handleAction(action) {
     "toggle-client-access": "Accès client modifié en mode démo.",
     "disable-access": "Accès désactivé en mode démo.",
     "enable-access": "Accès réactivé en mode démo.",
-    "edit-access": "Édition de l'accès ouverte en mode démo.",
     "edit-permissions": "Permissions collaborateur mises à jour en mode démo.",
     "new-template": "Modèle ajouté.",
     "edit-template": "Édition modèle ouverte.",
@@ -1190,6 +1237,7 @@ function init() {
   $("#logoutBtn").addEventListener("click", logout);
   $("#backToSiteBtn").addEventListener("click", returnToPublicSite);
   $("#contactForm").addEventListener("submit", (event) => { event.preventDefault(); toast("Demande enregistrée en mode démo."); event.target.reset(); });
+  document.addEventListener("click", closeOpenMenus);
 }
 
 init();
