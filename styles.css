@@ -368,6 +368,11 @@ input:focus, select:focus, textarea:focus, button:focus-visible { outline: 3px s
 .grid.cols-3 { grid-template-columns: repeat(3, minmax(0, 1fr)); }
 .grid.cols-4 { grid-template-columns: repeat(4, minmax(0, 1fr)); }
 .full-span { grid-column: 1 / -1; }
+.dashboard-focus { align-items: stretch; }
+.dashboard-panel { min-height: 430px; }
+.dashboard-panel h3 { font-size: 24px; margin-bottom: 18px; }
+.dashboard-strip { margin-top: 14px; }
+.dashboard-strip .kpi { background: rgba(244, 235, 228, 0.78); }
 .kpi, .metric, .module-card, .card, .table-card { padding: 18px; }
 .kpi strong, .metric strong { display: block; color: var(--brown); font-size: 32px; line-height: 1; }
 .module-card h3, .card h3 { margin-top: 0; color: var(--obsidian); }

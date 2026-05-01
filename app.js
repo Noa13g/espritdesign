@@ -198,13 +198,13 @@ const publicImages = [
 ];
 
 const globalNav = [
-  { view: "cockpit", label: "Dashboard agence" },
-  { view: "projects", label: "Projets" },
-  { view: "clients", label: "Clients" },
-  { view: "financeGlobal", label: "Finances" },
+  { view: "cockpit", label: "DASHBOARD AGENCE" },
+  { view: "projects", label: "PROJETS" },
+  { view: "clients", label: "CLIENTS" },
+  { view: "financeGlobal", label: "FINANCES" },
   { view: "planningGlobal", label: "Planning global" },
-  { view: "documentsGlobal", label: "Documents" },
-  { view: "settings", label: "Paramètres" }
+  { view: "documentsGlobal", label: "DOCUMENTS" },
+  { view: "settings", label: "PARAMETRE" }
 ];
 
 const projectNav = [
@@ -478,28 +478,16 @@ function cockpitMetrics() {
 }
 
 function renderCockpit() {
-  const m = cockpitMetrics();
-  const avgProfitability = visibleProjects().map(profitability).filter((p) => p.rate).reduce((sum, p, _, arr) => sum + p.rate / arr.length, 0);
   return `
-    ${renderViewTitle(state.role === "admin" ? "Dashboard agence" : "Espace collaborateur", "Tableau de bord multi-projets : activité, tâches globales, finances récentes et alertes.", `${actionButton("Créer client", 'data-action="new-client"')}${actionButton("Créer projet", 'data-action="new-project"')}${actionButton("Planning global", 'data-view-jump="planningGlobal"')}`)}
-    <div class="grid cols-4">
-      <div class="kpi"><strong>${m.active}</strong><span>Projets actifs</span></div>
-      <div class="kpi"><strong>${m.delayed}</strong><span>Projets à risque</span></div>
-      <div class="kpi"><strong>${m.waitingDecisions}</strong><span>Décisions client</span></div>
-      <div class="kpi"><strong>${m.overBudget}</strong><span>Budgets en dépassement</span></div>
-      <div class="kpi"><strong>${m.reportsToPublish}</strong><span>CR à publier</span></div>
-      <div class="kpi"><strong>${m.urgentTasks}</strong><span>Tâches urgentes</span></div>
-      <div class="kpi"><strong>${m.weekTime} h</strong><span>Temps saisi</span></div>
-      <div class="kpi"><strong>${Math.round(avgProfitability)} €/h</strong><span>Rentabilité moyenne</span></div>
+    ${renderViewTitle(state.role === "admin" ? "Dashboard" : "Espace collaborateur", "Vue globale de l'agence : planning multi-projets et suivi financier des honoraires.", `${actionButton("Créer client", 'data-action="new-client"')}${actionButton("Créer projet", 'data-action="new-project"')}${actionButton("Planning global", 'data-view-jump="planningGlobal"')}`)}
+    <div class="grid cols-2 dashboard-focus">
+      <div class="table-card dashboard-panel"><h3>Gantt Global</h3>${renderGantt()}</div>
+      <div class="table-card dashboard-panel"><h3>Suivi financier</h3>${renderFeesTable()}</div>
     </div>
-    <div class="grid cols-2" style="margin-top:14px">
-      <div class="table-card"><h3>Planning Gantt</h3>${renderGantt()}</div>
-      <div class="table-card"><h3>Suivi financier honoraires</h3>${renderFeesTable()}</div>
-    </div>
-    <div class="grid cols-3" style="margin-top:14px">
-      <div class="table-card"><h3>Alertes internes</h3>${renderAlerts()}</div>
-      <div class="table-card"><h3>Projets récents</h3>${renderRecentProjects()}</div>
-      <div class="table-card"><h3>Documents financiers récents</h3>${renderRecent("Factures et devis", db.documents.filter((d) => ["Facture", "Devis", "Contrat"].includes(d.type)).map((d) => `${projectName(d.projectId)} · ${d.title}`))}</div>
+    <div class="grid cols-3 dashboard-strip">
+      <div class="kpi"><strong>${visibleProjects().filter((p) => p.status !== "Terminé").length}</strong><span>Projets en cours</span></div>
+      <div class="kpi"><strong>${db.decisions.filter((d) => d.status === "En attente").length}</strong><span>Décisions en attente</span></div>
+      <div class="kpi"><strong>${money(visibleProjects().reduce((sum, p) => sum + Math.max(p.fees - p.feesBilled, 0), 0))}</strong><span>Reste honoraires</span></div>
     </div>
   `;
 }
@@ -889,10 +877,30 @@ function confirmDeleteProject(projectId) {
 function handleAction(action) {
   const project = currentProject();
   if (action === "create-client-access") return createClientAccess();
+  if (action === "new-client") {
+    state.activeProjectId = null;
+    state.previewClient = false;
+    state.view = "clients";
+    renderApp();
+    toast("Formulaire nouveau client ouvert.");
+    return;
+  }
+  if (action === "new-project") {
+    state.activeProjectId = null;
+    state.previewClient = false;
+    state.view = "projects";
+    renderApp();
+    toast("Page Projets ouverte pour créer ou consulter un projet.");
+    return;
+  }
+  if (action === "new-document" && !project) {
+    state.view = "documentsGlobal";
+    renderApp();
+    toast("Bibliothèque documents ouverte.");
+    return;
+  }
   const messages = {
-    "new-project": "Projet de démonstration créé.",
     "archive-project": `${project?.name || "Projet"} archivé en mode démo.`,
-    "new-client": "Fiche client de démonstration créée.",
     "new-prospect": "Prospect de démonstration ajouté.",
     "publish-overview": `Synthèse ${project?.name || "projet"} publiée côté client.`,
     "publish-brief": "Visibilité brief mise à jour en mode démo.",
@@ -1094,7 +1102,6 @@ function init() {
   $("#workspaceHomeBtn").addEventListener("click", goDashboard);
   $("#logoutBtn").addEventListener("click", logout);
   $("#backToSiteBtn").addEventListener("click", returnToPublicSite);
-  $("#printBtn").addEventListener("click", () => window.print());
   $("#contactForm").addEventListener("submit", (event) => { event.preventDefault(); toast("Demande enregistrée en mode démo."); event.target.reset(); });
 }
 
