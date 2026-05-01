@@ -8,6 +8,9 @@
   --line-strong: rgba(112, 107, 117, 0.42);
   --soft: 0 18px 42px rgba(112, 107, 117, 0.13);
   --shadow: 0 30px 90px rgba(112, 107, 117, 0.22);
+  --font-title: "Blair TTC", "Poppins", "Montserrat", sans-serif;
+  --font-body: "Acumin Variable Concept", "Poppins", "Inter", Arial, sans-serif;
+  --font-ui: "Poppins", "Inter", Arial, sans-serif;
 }
 
 * { box-sizing: border-box; }
@@ -16,8 +19,34 @@ body {
   margin: 0;
   color: var(--obsidian);
   background: var(--beige);
-  font-family: Inter, "Open Sans", Arial, sans-serif;
+  font-family: var(--font-body);
   line-height: 1.58;
+}
+body::before {
+  content: "";
+  position: fixed;
+  right: -10vw;
+  top: 7vh;
+  z-index: -1;
+  width: min(62vw, 760px);
+  height: min(62vw, 760px);
+  border: min(8vw, 92px) solid rgba(148, 122, 105, .055);
+  border-left-width: min(13vw, 150px);
+  border-radius: 0 50% 50% 0;
+  pointer-events: none;
+}
+body::after {
+  content: "";
+  position: fixed;
+  right: 0;
+  top: 30vh;
+  width: 42px;
+  height: 220px;
+  z-index: 0;
+  opacity: .28;
+  background: linear-gradient(to bottom, var(--moss) 0 24%, transparent 24% 34%, var(--brown) 34% 58%, transparent 58% 68%, var(--obsidian) 68% 100%);
+  border-radius: 10px 0 0 10px;
+  pointer-events: none;
 }
 body.locked { overflow: hidden; }
 img { display: block; max-width: 100%; }
@@ -30,6 +59,7 @@ button { cursor: pointer; }
   margin: 0 0 10px;
   color: var(--brown);
   font-size: 12px;
+  font-family: var(--font-ui);
   font-weight: 800;
   letter-spacing: .14em;
   text-transform: uppercase;
@@ -81,10 +111,14 @@ button { cursor: pointer; }
   background: var(--brown);
   color: var(--beige);
   padding: 12px 18px;
+  font-family: var(--font-ui);
   font-weight: 850;
   transition: transform .18s ease, background .18s ease;
 }
 .portal-button:hover, .primary:hover, .workspace button:hover, .form-card button:hover { background: var(--obsidian); transform: translateY(-1px); }
+.workspace button.btn-success, button.btn-success, .workspace button[data-result="Validé"], .workspace button[data-status="Validé"] { background: var(--moss); color: var(--beige); }
+.workspace button.btn-danger, button.btn-danger, .workspace button[data-result="Refusé"], .workspace button[data-status="Refusé"], .workspace button[data-delete-project] { background: var(--obsidian); color: var(--beige); }
+.workspace button.btn-danger:hover, button.btn-danger:hover, .workspace button[data-delete-project]:hover { background: var(--brown); }
 
 .hero {
   min-height: calc(100vh - 98px);
@@ -99,8 +133,8 @@ button { cursor: pointer; }
 .hero h1, .section h2, .portal-section h2, .contact-band h2, .login-modal h2, .project-context h1, .view-title h1 {
   margin: 0;
   color: var(--moss);
-  font-family: Georgia, "Times New Roman", serif;
-  font-weight: 600;
+  font-family: var(--font-title);
+  font-weight: 700;
   line-height: 1.04;
 }
 .hero h1 { font-size: clamp(48px, 7vw, 86px); margin-bottom: 26px; }
@@ -234,9 +268,9 @@ input:focus, select:focus, textarea:focus, button:focus-visible { outline: 3px s
 }
 .login-modal::backdrop { background: rgba(112, 107, 117, .52); backdrop-filter: blur(10px); }
 .login-modal form { position: relative; display: grid; gap: 14px; padding: 32px; }
+.login-logo { width: 118px; height: 118px; object-fit: contain; justify-self: center; }
 .close { position: absolute; top: 12px; right: 12px; width: 36px; height: 36px; padding: 0; border-radius: 50%; }
-.login-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; }
-.login-grid button { background: var(--cool); color: var(--obsidian); }
+.link-button { border: 0; background: transparent; color: var(--brown); padding: 4px; justify-self: start; font-weight: 800; }
 
 .app { min-height: 100vh; background: var(--beige); }
 .app-topbar {
@@ -254,6 +288,8 @@ input:focus, select:focus, textarea:focus, button:focus-visible { outline: 3px s
   backdrop-filter: blur(18px);
 }
 .app-topbar strong { display: block; color: var(--brown); }
+.topbar-home { border: 0; background: transparent; padding: 0; text-align: left; cursor: pointer; }
+.topbar-home:focus-visible { outline: 3px solid rgba(148, 122, 105, .25); outline-offset: 3px; }
 .topbar-actions { display: flex; flex-wrap: wrap; justify-content: flex-end; gap: 8px; }
 .app-shell { display: grid; grid-template-columns: 288px minmax(0, 1fr); min-height: calc(100vh - 72px); }
 .sidebar {
@@ -315,7 +351,7 @@ input:focus, select:focus, textarea:focus, button:focus-visible { outline: 3px s
   color: var(--obsidian);
 }
 .badge.public, .status.ok { background: var(--moss); color: var(--beige); }
-.badge.private, .status.warn { background: var(--brown); color: var(--beige); }
+.badge.private, .badge.warn, .status.warn { background: var(--brown); color: var(--beige); }
 .status.danger { background: var(--obsidian); color: var(--beige); }
 .view-title {
   display: grid;
@@ -331,6 +367,7 @@ input:focus, select:focus, textarea:focus, button:focus-visible { outline: 3px s
 .grid.cols-2 { grid-template-columns: repeat(2, minmax(0, 1fr)); }
 .grid.cols-3 { grid-template-columns: repeat(3, minmax(0, 1fr)); }
 .grid.cols-4 { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+.full-span { grid-column: 1 / -1; }
 .kpi, .metric, .module-card, .card, .table-card { padding: 18px; }
 .kpi strong, .metric strong { display: block; color: var(--brown); font-size: 32px; line-height: 1; }
 .module-card h3, .card h3 { margin-top: 0; color: var(--obsidian); }

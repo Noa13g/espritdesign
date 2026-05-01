@@ -115,25 +115,32 @@
     <dialog id="loginModal" class="login-modal">
       <form id="loginForm" method="dialog">
         <button class="close" value="cancel" aria-label="Fermer">×</button>
+        <img class="login-logo" src="https://www.esprit-design-architecture.com/wp-content/uploads/2025/01/Design-sans-titre-2025-01-15T143328.321.png" alt="Logo Esprit Design Architecture" />
         <p class="eyebrow">Connexion privée</p>
-        <h2>Choisir un espace de démonstration</h2>
-        <label>Identifiant<input id="loginId" value="admin@esprit-design.fr" /></label>
-        <label>Mot de passe / code<input id="loginPassword" type="password" value="demo" /></label>
-        <div class="login-grid">
-          <button type="button" data-demo-login="admin@esprit-design.fr">Admin</button>
-          <button type="button" data-demo-login="collaborateur@esprit-design.fr">Collaborateur</button>
-          <button type="button" data-demo-login="PROJET-LONDON">Client London</button>
-          <button type="button" data-demo-login="PROJET-LEVIS">Client Lévis</button>
-        </div>
+        <h2>Accédez à votre espace privé</h2>
+        <label>Email ou identifiant<input id="loginId" autocomplete="username" /></label>
+        <label>Mot de passe<input id="loginPassword" type="password" autocomplete="current-password" /></label>
         <button class="primary" type="submit">Se connecter</button>
-        <p class="small">Démo : admin@esprit-design.fr / demo · collaborateur@esprit-design.fr / demo · PROJET-LONDON / demo · PROJET-LEVIS / demo</p>
+        <button class="link-button" type="button" id="forgotPasswordBtn">Mot de passe oublié ?</button>
+        <button class="link-button" type="button" id="loginBackSiteBtn">Retour au site public</button>
+      </form>
+    </dialog>
+
+    <dialog id="forgotModal" class="login-modal">
+      <form id="forgotForm" method="dialog">
+        <button class="close" value="cancel" aria-label="Fermer">×</button>
+        <p class="eyebrow">Réinitialisation</p>
+        <h2>Mot de passe oublié ?</h2>
+        <p>Indiquez votre email ou identifiant projet. En mode démo, aucun email réel n'est envoyé.</p>
+        <label>Email ou identifiant<input id="forgotIdentifier" autocomplete="username" /></label>
+        <button class="primary" type="submit">Envoyer le lien de réinitialisation</button>
       </form>
     </dialog>
 
     <div id="app" class="app hidden">
       <header class="app-topbar">
         <div>
-          <strong id="workspaceTitle">Cockpit agence</strong>
+          <button id="workspaceHomeBtn" class="topbar-home" type="button"><strong id="workspaceTitle">Cockpit agence</strong></button>
           <span id="roleBadge">Admin</span>
         </div>
         <div class="topbar-actions">

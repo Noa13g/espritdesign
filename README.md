@@ -1,236 +1,154 @@
 # Esprit Design Architecture - Portail V2
 
-Plateforme privée de démonstration pour piloter les projets d'architecture d'intérieur Esprit Design Architecture, depuis le brief client jusqu'à la livraison.
+Portail privé professionnel de démonstration pour Esprit Design Architecture. Cette version applique le cahier des charges V2, le document `Doc1.docx`, la correction de navigation sans sélecteur projet global, et les règles de confidentialité agence/collaborateur/client.
 
-La V2 contient une vitrine fidèle à l'univers public Esprit Design, un cockpit agence complet, un espace collaborateur limité et un portail client filtré par projet. Le projet témoin client principal est **Projet London**.
-
-## Objectifs V2
-
-- Centraliser briefs, phases, moodboards, plans, rendus, achats, budgets, devis, documents, chantier et comptes rendus.
-- Piloter tous les projets depuis un cockpit agence avec KPIs, alertes, Gantt global et navigation par fiche projet.
-- Offrir un portail client premium, simple et rassurant, avec uniquement les éléments publiés.
-- Tracer les validations client : qui, quoi, quand, version et commentaire.
-- Préparer une base technique extensible vers une vraie authentification, une base de données et du stockage fichiers.
-- Limiter volontairement l'IA à deux usages utiles : synthèse projet et analyse documentaire.
-
-## Lancement local
+## Lancement
 
 ```bash
-node server.js
+npm start
 ```
 
-Ouvrir ensuite :
+Puis ouvrir :
 
 ```text
 http://127.0.0.1:4174/
 ```
 
-Le port par défaut est `4174`. Il peut être modifié avec `PORT=4175 node server.js`.
+Vérification syntaxe :
 
-## Identifiants démo
+```bash
+npm run check
+```
 
-| Rôle | Identifiant | Mot de passe | Redirection |
+## Authentification démo
+
+La page de connexion ne propose aucun choix de rôle. Le rôle est détecté automatiquement par l'identifiant et le mot de passe.
+
+| Rôle | Identifiant | Mot de passe | Arrivée |
 | --- | --- | --- | --- |
-| Admin agence | `admin@esprit-design.fr` | `demo` | Cockpit complet |
-| Collaborateur | `collaborateur@esprit-design.fr` | `demo` | Cockpit limité aux projets assignés |
-| Client London | `PROJET-LONDON` | `demo` | Portail client London |
-| Client Lévis | `PROJET-LEVIS` | `demo` | Portail client Lévis |
+| Admin agence | `admin@esprit-design.fr` | `demo` | Dashboard agence |
+| Collaborateur | `collaborateur@esprit-design.fr` | `demo` | Espace collaborateur limité |
+| Client London email | `client.london@example.fr` | `London2026!` | Portail Projet London |
+| Client London foyer | `PROJET-LONDON` | `London2026` | Portail Projet London |
+| Client Lévis email | `client.levis@example.fr` | `Levis2026!` | Portail Projet Lévis |
+| Client Lévis foyer | `PROJET-LEVIS` | `Levis2026` | Portail Projet Lévis |
 
-L'authentification est simulée côté navigateur pour la démonstration. Elle ne remplace pas une vraie sécurité serveur.
+Le lien `Mot de passe oublié ?` ouvre une modale et affiche toujours : `Si ce compte existe, un email de réinitialisation a été envoyé.` Aucun email réel n'est envoyé en mode démo.
 
-## Modules Agence
+## Navigation
 
-- Cockpit agence avec KPIs, alertes, rentabilité, temps semaine et Gantt multi-projets.
-- Tous les projets : carte et tableau, recherche, filtres visuels et ouverture d'une fiche projet.
-- Clients : coordonnées, préférences, notes internes et historique projets.
-- Prospects simples : demandes entrantes, statut, budget estimé, prochaine action.
-- Espace projet ouvert : vue d'ensemble, brief, contrat, phases, moodboards, plans/rendus, shopping list, budget, devis, planning, décisions, tâches internes, suivi chantier, comptes rendus, documents, messages, temps passé, exports et paramètres.
-- Administration : utilisateurs, rôles, permissions, accès client, seuils de rentabilité, statuts et charte.
-- Modèles : brief, phases, compte rendu, shopping list, tâches, message client statique et export.
+- `Accès privé` ouvre la connexion.
+- `Dashboard agence` est une page globale multi-projets.
+- Il n'y a aucun sélecteur de projet global.
+- Pour entrer dans un projet : `Projets` > `Ouvrir le projet`.
+- Les menus projet apparaissent uniquement dans un projet ouvert.
+- Le bouton `Cockpit agence` dans le header revient au dashboard global et sort du contexte projet.
+- Le bouton `Site public` ferme l'espace privé : pour revenir au portail, il faut se reconnecter.
 
-## Modules Client
+## Pages globales agence
 
-Le client voit uniquement son projet et uniquement les éléments publiés :
+- Dashboard agence : KPIs, boutons Créer client / Créer projet, Gantt global, suivi financier honoraires, alertes et documents financiers récents.
+- Projets : tableau avec nom client, nom projet, adresse/type, phase/statut, priorité/santé, budget/avancement, portail client et actions.
+- Clients : base clients, coordonnées, communication, notes internes.
+- Finances : budgets, engagements, restes disponibles et rentabilité interne.
+- Planning global : Gantt multi-projets et cartes projets.
+- Documents : bibliothèque transversale agence.
+- Paramètres : utilisateurs, rôles, accès, premier mot de passe client, permissions, charte, seuils et statuts.
 
-- Accueil projet.
-- Messages projet non internes.
-- Décisions à valider.
-- Brief validé.
-- Moodboards publiés.
-- Plans et vues 3D publiés.
-- Shopping list publiée avec actions de validation.
-- Budget partagé.
-- Devis publiés.
-- Planning simplifié.
-- Suivi chantier publié.
-- Comptes rendus publiés.
-- Documents publiés.
-- Contrat et honoraires uniquement si explicitement publiés.
-- Factures et paiements visibles uniquement via documents publiés.
+## Gestion des accès
 
-Le client ne voit jamais : rentabilité, marges, temps passé, notes internes, tâches internes, documents internes ou données financières stratégiques.
+Dans `Paramètres > Utilisateurs & accès`, l'admin voit les mots de passe masqués (`••••••••`) et peut simuler :
 
-## Navigation Projet
+- création admin / collaborateur / client ;
+- association d'un client à un projet ;
+- choix manuel du premier mot de passe ;
+- confirmation obligatoire ;
+- rejet mot de passe vide ;
+- rejet identifiant déjà existant ;
+- reset, modification, désactivation et réactivation ;
+- permissions collaborateur.
 
-Le cockpit est un tableau de bord multi-projets. Pour consulter un projet, il faut passer par `Projets`, puis ouvrir une carte ou une ligne projet. Les menus de projet n'apparaissent qu'une fois une fiche projet ouverte, sous forme de sous-navigation dédiée.
+Les mots de passe sont stockés en clair dans `app.js` uniquement pour la démonstration locale. En production, ils devront être hashés côté serveur.
 
-Le projet ouvert pilote les modules suivants :
+## Espaces
 
-- budget ;
-- achats ;
-- documents ;
-- chantier ;
-- comptes rendus ;
-- messages ;
-- décisions ;
-- phases ;
-- moodboards ;
-- devis ;
-- planning ;
-- temps passé et rentabilité ;
-- synthèse IA ;
-- analyse documentaire.
+Admin :
+- voit tout, y compris finances, temps passé, rentabilité, notes et documents internes.
 
-Les données de démonstration incluent Projet London, Projet Lévis, Projet Foch, Projet Bali et Projet Cabriès.
+Collaborateur :
+- voit uniquement les projets assignés ;
+- ne voit pas rentabilité, marges, finances sensibles ni temps global par défaut.
 
-## IA V2
+Client :
+- arrive directement dans son projet ;
+- ne voit ni dashboard agence, ni autres projets, ni paramètres ;
+- ne voit que les éléments publiés de son projet.
 
-Le serveur expose uniquement :
+## Modules projet conservés
+
+Vue d'ensemble, brief, contrat, phases, moodboards, plans/rendus 3D, shopping list, budget, devis, planning projet, décisions, tâches internes, suivi chantier, comptes rendus, documents, messages, temps/rentabilité, exports et paramètres projet.
+
+## IA limitée
+
+Endpoint :
 
 ```text
 POST /api/ai
 ```
 
-Actions autorisées :
+Actions autorisées uniquement :
 
-```json
-{
-  "action": "summarizeProject",
-  "projectId": "london",
-  "role": "admin",
-  "audience": "agency",
-  "context": {}
-}
-```
+- `summarizeProject`
+- `analyzeDocument`
 
-```json
-{
-  "action": "analyzeDocument",
-  "projectId": "london",
-  "role": "admin",
-  "documentType": "invoice",
-  "documentText": "Facture...",
-  "context": {}
-}
-```
-
-Règles :
-
-- réponse en français ;
-- utilisation exclusive du contexte fourni ;
-- aucune invention volontaire ;
-- données internes supprimées pour les résumés client ;
-- analyse facture/devis vérifiable avant intégration ;
-- aucun assistant général, aucune génération automatique de messages client.
-
-Sans `OPENAI_API_KEY`, le serveur répond en mode démo local explicite. Pour activer OpenAI :
+Toute autre action est rejetée. Sans `OPENAI_API_KEY`, le serveur répond en mode démo local. Avec OpenAI :
 
 ```bash
-OPENAI_API_KEY="votre_cle" OPENAI_MODEL="gpt-5" node server.js
+OPENAI_API_KEY="votre_cle" OPENAI_MODEL="gpt-5" npm start
 ```
 
-## Analyse documentaire
+L'analyse de facture/devis reste vérifiable avant ajout à la shopping list ou imputation budget.
 
-Dans le module Documents :
+## Identité visuelle
 
-- choix du type facture/devis/autre ;
-- upload texte de démonstration ou collage manuel ;
-- extraction fournisseur, date, total, TVA et lignes ;
-- table de vérification ;
-- bouton pour ajouter les lignes à la shopping list ;
-- imputation au budget du projet ouvert ;
-- création d'un document facture en mode démo.
+- Palette stricte : `#947a69`, `#9ea882`, `#706b75`, `#d3d0cd`, `#f4ebe4`.
+- Typographies : Blair TTC / Acumin Variable Concept si disponibles, Poppins en alternative web.
+- La police Good Karma est interdite et non utilisée.
+- Fond graphique `D` du logo en filigrane très subtil.
+- Onglets graphiques inspirés du `E` du logo à droite.
+- Boutons validation en vert mousse.
+- Alertes et suppressions en rouge sombre / obsidian.
 
-Aucune extraction n'est intégrée automatiquement sans validation utilisateur.
+## Limites démo
 
-## Exports
+- Pas de vraie base de données : les données sont réinitialisées au rechargement.
+- Authentification simulée.
+- Mot de passe oublié simulé.
+- Lecture PDF binaire non incluse : l'analyse document lit texte collé ou fichiers texte.
+- Exports PDF représentés par des vues imprimables `window.print()`.
 
-Les exports sont implémentés en vues imprimables avec `window.print()` et CSS print :
+## Tests effectués
 
-- dossier projet complet ;
-- brief validé ;
-- APS ;
-- APD ;
-- moodboard ;
-- shopping list ;
-- budget ;
-- compte rendu ;
-- synthèse devis ;
-- fin de projet.
+- `npm run check`
+- lancement local
+- vitrine publique et Accès privé
+- login sans choix de rôle
+- mot de passe oublié
+- admin dashboard global
+- navigation globale
+- page Projets et ouverture London/Foch
+- retour Dashboard masquant les menus projet
+- espace client London filtré
+- espace collaborateur limité
+- pages globales Finances / Planning / Documents / Paramètres
+- IA `summarizeProject`, `analyzeDocument` et rejet action non autorisée
+- vérification absence de sélecteur projet global
 
-## Structure fichiers
-
-```text
-index.html   Vitrine, connexion et shell applicatif
-styles.css   Charte premium responsive et print
-app.js       Données démo, rôles, navigation, modules et interactions
-server.js    Serveur local Node + API IA contrôlée
-package.json Scripts npm start / npm run check
-README.md    Documentation V2
-```
-
-## Choix techniques
-
-La V2 reste volontairement en HTML/CSS/JS + Node sans dépendances. Ce choix permet une démonstration locale très simple, tout en structurant les données et les modules pour une future migration vers React/Vite, une base de données et une vraie authentification.
-
-## Hypothèses documentées
-
-- Le cahier des charges V2 est traduit en écrans et règles de démonstration, sans persistance serveur.
-- Les boutons de création/modification lourde produisent des feedbacks démo quand l'action complète n'est pas nécessaire à la preuve fonctionnelle.
-- Les images publiques disponibles et des visuels libres sont utilisés pour enrichir la démonstration.
-- L'accès foyer simplifié est implémenté ; l'accès nominatif avancé est préparé dans la structure utilisateurs.
-- Les exports PDF réels sont représentés par des vues imprimables premium.
-
-## Tests manuels effectués / à rejouer
-
-1. Lancement local.
-2. Chargement vitrine.
-3. Navigation vitrine.
-4. Bouton Accès privé.
-5. Connexion admin.
-6. Connexion collaborateur.
-7. Connexion client London.
-8. Ouverture Projet London puis retour Cockpit.
-9. Budget, achats, documents et chantier filtrés par projet ouvert.
-10. Publication / masquage document côté client.
-11. Validation client avec prénom/commentaire.
-12. Shopping list avec statuts.
-13. Ajout/imputation depuis analyse facture.
-14. Résumé IA projet.
-15. Export imprimable.
-16. Responsive mobile/tablette.
-
-## Limites connues
-
-- Les données sont en mémoire navigateur : un rechargement remet la démo à zéro.
-- La lecture PDF binaire réelle n'est pas incluse ; le mode démo lit le texte collé ou les fichiers texte.
-- L'authentification est simulée, non sécurisée pour production.
-- Les créations avancées sont en mode démo et devront être reliées à une base de données.
-
-## Prochaines étapes recommandées
-
-- Migrer vers une application Vite + React ou Next.js si la plateforme devient un vrai produit.
-- Ajouter une base PostgreSQL/Supabase.
-- Ajouter stockage fichiers privé.
-- Ajouter authentification robuste avec rôles et permissions serveur.
-- Générer des PDF réels côté serveur.
-- Brancher OCR/PDF extraction pour factures et devis.
-
-## Commandes Git
+## Git
 
 ```bash
 git status
 git add .
-git commit -m "Build complete V2 Esprit Design portal"
+git commit -m "Polish Esprit Design portal navigation, auth, brand and QA"
 git push
 ```

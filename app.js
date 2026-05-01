@@ -15,6 +15,7 @@ const state = {
   view: "cockpit",
   demoUser: null,
   viewMode: "table",
+  previewClient: false,
   clientValidator: "Client London"
 };
 
@@ -51,17 +52,19 @@ const roles = {
 const demoUsers = {
   "admin@esprit-design.fr": { password: "demo", role: "admin", name: "Emmanuelle Gobert" },
   "collaborateur@esprit-design.fr": { password: "demo", role: "collaborator", name: "Collaborateur agence", projects: ["london", "foch", "levis"] },
-  "PROJET-LONDON": { password: "demo", role: "client", name: "Foyer London", projectId: "london" },
-  "PROJET-LEVIS": { password: "demo", role: "client", name: "Foyer Lévis", projectId: "levis" }
+  "client.london@example.fr": { password: "London2026!", role: "client", name: "Foyer London", projectId: "london" },
+  "PROJET-LONDON": { password: "London2026", role: "client", name: "Foyer London", projectId: "london" },
+  "client.levis@example.fr": { password: "Levis2026!", role: "client", name: "Foyer Lévis", projectId: "levis" },
+  "PROJET-LEVIS": { password: "Levis2026", role: "client", name: "Foyer Lévis", projectId: "levis" }
 };
 
 const db = {
   clients: [
-    { id: "c-london", firstName: "Claire", lastName: "Martin", email: "claire.martin@example.fr", phone: "06 12 45 78 90", address: "London", communication: "Email + portail", notes: "Aime les intérieurs modernes industriels, rangements invisibles.", projectIds: ["london"] },
-    { id: "c-levis", firstName: "Anne", lastName: "Dupont", email: "anne.dupont@example.fr", phone: "06 84 32 11 09", address: "Paris 17e", communication: "Portail prioritaire", notes: "Projet haut de gamme, attention forte aux détails patrimoniaux.", projectIds: ["levis"] },
-    { id: "c-foch", firstName: "Julien", lastName: "Robert", email: "julien.robert@example.fr", phone: "06 22 13 93 41", address: "Paris", communication: "Téléphone + portail", notes: "Besoin d'arbitrages rapides sur devis entreprises.", projectIds: ["foch"] },
-    { id: "c-bali", firstName: "Nora", lastName: "Benali", email: "nora.benali@example.fr", phone: "06 50 78 71 11", address: "Location saisonnière", communication: "Email", notes: "Petit budget, effet coup de coeur attendu.", projectIds: ["bali"] },
-    { id: "c-cabries", firstName: "Sophie", lastName: "Morel", email: "sophie.morel@example.fr", phone: "06 77 00 22 11", address: "Cabriès", communication: "Portail", notes: "Projet créé pour démontrer l'extension future.", projectIds: ["cabries"] }
+    { id: "c-london", civility: "Mme", firstName: "Claire", lastName: "Martin", email: "claire.martin@example.fr", phone: "06 12 45 78 90", address: "12 King's Road", zip: "SW3", city: "London", communication: "Email + portail", notes: "Aime les intérieurs modernes industriels, rangements invisibles.", projectIds: ["london"] },
+    { id: "c-levis", civility: "Mme", firstName: "Anne", lastName: "Dupont", email: "anne.dupont@example.fr", phone: "06 84 32 11 09", address: "14 rue de Lévis", zip: "75017", city: "Paris", communication: "Portail prioritaire", notes: "Projet haut de gamme, attention forte aux détails patrimoniaux.", projectIds: ["levis"] },
+    { id: "c-foch", civility: "M.", firstName: "Julien", lastName: "Robert", email: "julien.robert@example.fr", phone: "06 22 13 93 41", address: "Avenue Foch", zip: "75116", city: "Paris", communication: "Téléphone + portail", notes: "Besoin d'arbitrages rapides sur devis entreprises.", projectIds: ["foch"] },
+    { id: "c-bali", civility: "Mme", firstName: "Nora", lastName: "Benali", email: "nora.benali@example.fr", phone: "06 50 78 71 11", address: "Résidence saisonnière", zip: "13100", city: "Aix-en-Provence", communication: "Email", notes: "Petit budget, effet coup de coeur attendu.", projectIds: ["bali"] },
+    { id: "c-cabries", civility: "Mme", firstName: "Sophie", lastName: "Morel", email: "sophie.morel@example.fr", phone: "06 77 00 22 11", address: "Chemin des oliviers", zip: "13480", city: "Cabriès", communication: "Portail", notes: "Projet créé pour démontrer l'extension future.", projectIds: ["cabries"] }
   ],
   prospects: [
     { id: "p1", name: "Famille Garnier", contact: "garnier@example.fr", source: "Site web", type: "Rénovation maison", budget: 65000, deadline: "Septembre 2026", status: "Rendez-vous fixé", nextAction: "Préparer questionnaire découverte", notes: "Budget confortable, demande globale." },
@@ -69,14 +72,14 @@ const db = {
     { id: "p3", name: "SCI Parrines", contact: "sci@example.fr", source: "Recommandation", type: "Appartement locatif", budget: 32000, deadline: "Fin 2026", status: "Devis envoyé", nextAction: "Relance devis", notes: "Projet intéressant mais arbitrage budget." }
   ],
   projects: [
-    { id: "london", name: "Projet London", clientId: "c-london", clientAccess: true, householdLogin: "PROJET-LONDON", address: "London", type: "Appartement type 1", phase: "Brief client", status: "Brief en cours", priority: "Normale", health: "ok", start: "2026-04-20", end: "2026-07-15", progress: 52, worksBudget: 8400, furnitureBudget: 11300, fees: 3000, feesBilled: 1200, timeEstimated: 44, image: "https://esprit-design-architecture.fr/wp-content/uploads/2024/12/Design-sans-titre-42.png", description: "Aménagement sur-mesure d'un appartement type 1 dans un style moderne industriel, alliant fonctionnalité et esthétique contemporaine.", publicSummary: "Brief et ambiance moderne industrielle en cours de validation.", assigned: ["collaborator"] },
-    { id: "levis", name: "Projet Lévis", clientId: "c-levis", clientAccess: true, householdLogin: "PROJET-LEVIS", address: "Paris 17e", type: "Appartement haussmannien", phase: "Suivi esthétique chantier", status: "Chantier en cours", priority: "Haute", health: "ok", start: "2026-01-15", end: "2026-06-28", progress: 74, worksBudget: 39000, furnitureBudget: 15000, fees: 7200, feesBilled: 5400, timeEstimated: 82, image: "https://esprit-design-architecture.fr/wp-content/uploads/2024/12/Design-sans-titre-47.png", description: "Rénovation d'un appartement haussmannien de 54 m², conservation de l'âme du lieu et création d'un espace moderne, fonctionnel et modulable.", publicSummary: "Chantier en cours, mobilier modulable en suivi.", assigned: ["collaborator"] },
-    { id: "foch", name: "Projet Foch", clientId: "c-foch", clientAccess: true, householdLogin: "PROJET-FOCH", address: "Paris", type: "Transformation logement", phase: "DCE / consultation entreprises", status: "Consultation entreprises", priority: "Haute", health: "risk", start: "2026-03-01", end: "2026-08-30", progress: 63, worksBudget: 31000, furnitureBudget: 15200, fees: 5200, feesBilled: 2500, timeEstimated: 68, image: "https://esprit-design-architecture.fr/wp-content/uploads/2024/12/Design-sans-titre-41.png", description: "Transformation complète d'un logement une chambre en espace de vie confortable et contemporain.", publicSummary: "Comparaison des devis entreprises en cours.", assigned: ["collaborator"] },
-    { id: "bali", name: "Projet Bali", clientId: "c-bali", clientAccess: false, householdLogin: "PROJET-BALI", address: "Location saisonnière", type: "Décoration", phase: "Livraison", status: "Livraison", priority: "Normale", health: "ok", start: "2026-02-01", end: "2026-05-03", progress: 92, worksBudget: 3800, furnitureBudget: 11100, fees: 2200, feesBilled: 2200, timeEstimated: 30, image: "https://esprit-design-architecture.fr/wp-content/uploads/2024/12/Design-sans-titre-43.png", description: "Décoration d'un logement destiné à la location saisonnière avec un aménagement coup de coeur à petit budget.", publicSummary: "Livraison presque finalisée.", assigned: [] },
-    { id: "cabries", name: "Projet Cabriès", clientId: "c-cabries", clientAccess: false, householdLogin: "MAISON-CABRIES", address: "Cabriès", type: "Maison familiale", phase: "Découverte / rendez-vous initial", status: "Prospect", priority: "Basse", health: "watch", start: "2026-05-10", end: "2026-11-20", progress: 12, worksBudget: 48000, furnitureBudget: 18000, fees: 6800, feesBilled: 0, timeEstimated: 75, image: "https://www.esprit-design-architecture.com/wp-content/uploads/2024/12/Sans-titre-700-x-600-px.png", description: "Projet de démonstration pour une maison familiale à Cabriès.", publicSummary: "Dossier découverte en préparation.", assigned: [] }
+    { id: "london", name: "Projet London", clientId: "c-london", clientAccess: true, householdLogin: "PROJET-LONDON", address: "12 King's Road", zip: "SW3", city: "London", type: "Appartement", phase: "Brief", status: "En cours", priority: "Normale", health: "Bonne", start: "2026-04-20", end: "2026-07-15", progress: 52, worksBudget: 8400, furnitureBudget: 11300, fees: 3000, feesBilled: 1200, timeEstimated: 44, image: "https://esprit-design-architecture.fr/wp-content/uploads/2024/12/Design-sans-titre-42.png", description: "Aménagement sur-mesure d'un appartement type 1 dans un style moderne industriel, alliant fonctionnalité et esthétique contemporaine.", publicSummary: "Brief et ambiance moderne industrielle en cours de validation.", assigned: ["collaborator"] },
+    { id: "levis", name: "Projet Lévis", clientId: "c-levis", clientAccess: true, householdLogin: "PROJET-LEVIS", address: "14 rue de Lévis", zip: "75017", city: "Paris", type: "Appartement", phase: "Exécution", status: "En cours", priority: "Haute", health: "Bonne", start: "2026-01-15", end: "2026-06-28", progress: 74, worksBudget: 39000, furnitureBudget: 15000, fees: 7200, feesBilled: 5400, timeEstimated: 82, image: "https://esprit-design-architecture.fr/wp-content/uploads/2024/12/Design-sans-titre-47.png", description: "Rénovation d'un appartement haussmannien de 54 m², conservation de l'âme du lieu et création d'un espace moderne, fonctionnel et modulable.", publicSummary: "Chantier en cours, mobilier modulable en suivi.", assigned: ["collaborator"] },
+    { id: "foch", name: "Projet Foch", clientId: "c-foch", clientAccess: true, householdLogin: "PROJET-FOCH", address: "Avenue Foch", zip: "75116", city: "Paris", type: "Appartement", phase: "DCE", status: "En cours", priority: "Haute", health: "À surveiller", start: "2026-03-01", end: "2026-08-30", progress: 63, worksBudget: 31000, furnitureBudget: 15200, fees: 5200, feesBilled: 2500, timeEstimated: 68, image: "https://esprit-design-architecture.fr/wp-content/uploads/2024/12/Design-sans-titre-41.png", description: "Transformation complète d'un logement une chambre en espace de vie confortable et contemporain.", publicSummary: "Comparaison des devis entreprises en cours.", assigned: ["collaborator"] },
+    { id: "bali", name: "Projet Bali", clientId: "c-bali", clientAccess: false, householdLogin: "PROJET-BALI", address: "Résidence saisonnière", zip: "13100", city: "Aix-en-Provence", type: "Studio", phase: "Livraison", status: "En cours", priority: "Normale", health: "Bonne", start: "2026-02-01", end: "2026-05-03", progress: 92, worksBudget: 3800, furnitureBudget: 11100, fees: 2200, feesBilled: 2200, timeEstimated: 30, image: "https://esprit-design-architecture.fr/wp-content/uploads/2024/12/Design-sans-titre-43.png", description: "Décoration d'un logement destiné à la location saisonnière avec un aménagement coup de coeur à petit budget.", publicSummary: "Livraison presque finalisée.", assigned: [] },
+    { id: "cabries", name: "Projet Cabriès", clientId: "c-cabries", clientAccess: false, householdLogin: "MAISON-CABRIES", address: "Chemin des oliviers", zip: "13480", city: "Cabriès", type: "Maison", phase: "Découverte / RDV initial", status: "À venir", priority: "Basse", health: "À surveiller", start: "2026-05-10", end: "2026-11-20", progress: 12, worksBudget: 48000, furnitureBudget: 18000, fees: 6800, feesBilled: 0, timeEstimated: 75, image: "https://www.esprit-design-architecture.com/wp-content/uploads/2024/12/Sans-titre-700-x-600-px.png", description: "Projet de démonstration pour une maison familiale à Cabriès.", publicSummary: "Dossier découverte en préparation.", assigned: [] }
   ],
   phases: [
-    "Découverte / rendez-vous initial", "Brief client", "APS", "APD", "DCE / consultation entreprises", "Arbitrages budget", "Préparation chantier", "Suivi esthétique chantier", "Livraison", "Clôture projet"
+    "Découverte / RDV initial", "Brief", "APS", "APD", "DCE", "Chiffrage", "Préparation", "Exécution", "Livraison", "Clôture"
   ],
   phaseRecords: [
     { projectId: "london", name: "Découverte / rendez-vous initial", status: "Validé", start: "2026-04-20", end: "2026-04-24", realEnd: "2026-04-23", progress: 100, deliverables: "Questionnaire, contraintes, budget cible", validations: "Compte rendu découverte", internal: "Client réactif." },
@@ -153,6 +156,13 @@ const db = {
     { id: "time2", projectId: "london", date: "2026-04-27", duration: 2, phase: "Brief client", taskType: "moodboard", description: "Recherche ambiance industrielle", billable: true, internal: "" },
     { id: "time3", projectId: "foch", date: "2026-04-26", duration: 5, phase: "DCE / consultation entreprises", taskType: "analyse devis", description: "Comparatif devis", billable: true, internal: "Risque dépassement." }
   ],
+  accessAccounts: [
+    { id: "acc-admin", name: "Emmanuelle Gobert", identifier: "admin@esprit-design.fr", role: "admin", projectId: "", status: "Actif", passwordMasked: "••••••••", forceChange: false, permissions: "Tous droits" },
+    { id: "acc-collab", name: "Collaborateur agence", identifier: "collaborateur@esprit-design.fr", role: "collaborator", projectId: "london, foch, levis", status: "Actif", passwordMasked: "••••••••", forceChange: false, permissions: "Modification, tâches, CR, documents publiables" },
+    { id: "acc-london-email", name: "Foyer London", identifier: "client.london@example.fr", role: "client", projectId: "london", status: "Actif", passwordMasked: "••••••••", forceChange: true, permissions: "Portail client publié" },
+    { id: "acc-london-code", name: "Foyer London", identifier: "PROJET-LONDON", role: "client", projectId: "london", status: "Actif", passwordMasked: "••••••••", forceChange: false, permissions: "Accès foyer simplifié" },
+    { id: "acc-levis-code", name: "Foyer Lévis", identifier: "PROJET-LEVIS", role: "client", projectId: "levis", status: "Actif", passwordMasked: "••••••••", forceChange: false, permissions: "Accès foyer simplifié" }
+  ],
   users: [
     { id: "u1", name: "Emmanuelle Gobert", role: "admin", email: "admin@esprit-design.fr", projects: "all", status: "Actif" },
     { id: "u2", name: "Collaborateur agence", role: "collaborator", email: "collaborateur@esprit-design.fr", projects: "london, foch, levis", status: "Actif" },
@@ -188,13 +198,12 @@ const publicImages = [
 ];
 
 const globalNav = [
-  { view: "cockpit", label: "Cockpit" },
+  { view: "cockpit", label: "Dashboard agence" },
   { view: "projects", label: "Projets" },
   { view: "clients", label: "Clients" },
-  { view: "prospects", label: "Prospects" },
   { view: "financeGlobal", label: "Finances" },
   { view: "planningGlobal", label: "Planning global" },
-  { view: "documentsGlobal", label: "Documents globaux" },
+  { view: "documentsGlobal", label: "Documents" },
   { view: "settings", label: "Paramètres" }
 ];
 
@@ -259,8 +268,12 @@ function hasProjectContext() {
   return Boolean(state.activeProjectId && currentProject() && projectViews.has(state.view));
 }
 
+function isClientSurface() {
+  return state.role === "client" || state.previewClient;
+}
+
 function isVisibleClient(item) {
-  return state.role !== "client" || item.visibleClient === true || item.published === true || item.status === "Publié" || item.status === "Validé";
+  return (state.role !== "client" && !state.previewClient) || item.visibleClient === true || item.published === true || item.status === "Publié" || item.status === "Validé";
 }
 
 function toast(message) {
@@ -276,8 +289,12 @@ function badge(label, type = "") {
 }
 
 function statusBadge(status) {
-  const type = /retard|bloqué|critique|dépassement|risk|faible/i.test(status) ? "danger" : /attente|analyse|cours|proposé|envoyé|watch/i.test(status) ? "warn" : "ok";
+  const type = /retard|bloqué|critique|dépassement|risk|faible|mauvaise|refusé|supprimer/i.test(status) ? "danger" : /attente|analyse|cours|proposé|envoyé|watch|surveiller|venir/i.test(status) ? "warn" : "ok";
   return `<span class="status ${type}">${status}</span>`;
+}
+
+function actionButton(label, attrs = "", tone = "") {
+  return `<button type="button" class="${tone ? `btn-${tone}` : ""}" ${attrs}>${label}</button>`;
 }
 
 function visibilityBadge(item) {
@@ -295,11 +312,14 @@ function renderPublicProjects() {
 }
 
 function openLogin() {
+  $("#loginId").value = "";
+  $("#loginPassword").value = "";
   $("#loginModal").showModal();
 }
 
 function login(identifier, password) {
-  const user = demoUsers[identifier];
+  const key = identifier.trim();
+  const user = demoUsers[key];
   if (!user || user.password !== password) {
     toast("Identifiant ou mot de passe incorrect en mode démo.");
     return;
@@ -314,18 +334,41 @@ function login(identifier, password) {
   renderApp();
 }
 
-function logout() {
+function logout(showLogin = true) {
   state.role = "public";
   state.demoUser = null;
   state.activeProjectId = null;
   state.view = "cockpit";
+  state.previewClient = false;
   $("#app").classList.add("hidden");
   $("#publicSite").classList.remove("hidden");
+  if (showLogin) window.setTimeout(openLogin, 50);
+}
+
+function returnToPublicSite() {
+  logout(false);
+  window.scrollTo({ top: 0, behavior: "smooth" });
+}
+
+function goDashboard() {
+  state.previewClient = false;
+  if (state.role === "client") {
+    state.view = "clientHome";
+  } else if (state.previewClient) {
+    $("#sidebar").innerHTML = clientNav.map((group) => `
+      <h3>Prévisualisation client</h3>
+      ${group.items.map(([view, label]) => `<button type="button" data-view="${view}" class="${state.view === view ? "active" : ""}">${label}</button>`).join("")}
+    `).join("");
+  } else {
+    state.activeProjectId = null;
+    state.view = "cockpit";
+  }
+  renderApp();
 }
 
 function renderApp() {
   const role = currentRole();
-  $("#workspaceTitle").textContent = state.role === "client" ? "Portail client" : state.role === "collaborator" ? "Espace collaborateur" : "Cockpit agence";
+  $("#workspaceTitle").textContent = state.role === "client" ? "Portail client" : "Cockpit agence";
   $("#roleBadge").textContent = role.label;
   renderSidebar();
   renderProjectContext();
@@ -344,13 +387,14 @@ function renderSidebar() {
     $("#sidebar").innerHTML = `
       <h3>Agence</h3>
       <label class="sidebar-search">Recherche<input placeholder="Projet, client, document"></label>
-      ${globalNav.map((item) => `<button type="button" data-view="${item.view}" class="${state.view === item.view || (item.view === "projects" && hasProjectContext()) ? "active" : ""}">${item.label}</button>`).join("")}
+      ${(state.role === "collaborator" ? globalNav.filter((item) => !["financeGlobal", "settings"].includes(item.view)) : globalNav).map((item) => `<button type="button" data-view="${item.view}" class="${state.view === item.view || (item.view === "projects" && hasProjectContext()) ? "active" : ""}">${item.label}</button>`).join("")}
       ${hasProjectContext() ? `<h3>Projet / ${project.name.replace("Projet ", "")}</h3>${nav.map(([view, label]) => `<button type="button" data-view="${view}" class="${state.view === view ? "active" : ""}">${label}</button>`).join("")}` : ""}
     `;
   }
   $$("[data-view]").forEach((button) => button.addEventListener("click", () => {
     state.view = button.dataset.view;
-    if (state.role !== "client" && !projectViews.has(state.view)) state.activeProjectId = null;
+    if (state.role !== "client" && !state.previewClient && !projectViews.has(state.view)) state.activeProjectId = null;
+    if (!projectViews.has(state.view)) state.previewClient = false;
     renderApp();
   }));
 }
@@ -367,10 +411,10 @@ function renderProjectContext() {
   const label = projectNav.find(([view]) => view === state.view)?.[1] || (state.view === "clientHome" ? "Accueil projet" : "Projet");
   $("#breadcrumb").textContent = state.role === "client" ? `${project.name} / ${label}` : `Projets / ${project.name} / ${label}`;
   $("#projectContextTitle").textContent = project.name;
-  $("#activeProjectMeta").textContent = `${client?.firstName || ""} ${client?.lastName || ""} · ${project.address} · ${project.phase} · ${project.status}`;
-  $("#visibilityLegend").innerHTML = state.role === "client"
+  $("#activeProjectMeta").textContent = `${client?.civility || ""} ${client?.firstName || ""} ${client?.lastName || ""} · ${project.zip || ""} ${project.city || project.address} · ${project.type} · ${project.phase} · ${project.status}`;
+  $("#visibilityLegend").innerHTML = state.role === "client" || state.previewClient
     ? `${badge("Vue client filtrée", "public")} ${badge(project.householdLogin, "public")}`
-    : `${badge("Espace projet", "public")} ${project.clientAccess ? badge("Accès client actif", "public") : badge("Accès client inactif", "private")}`;
+    : `${badge(project.priority, project.priority === "Haute" ? "warn" : "public")} ${statusBadge(project.health)} ${project.clientAccess ? badge("Portail client actif", "public") : badge("Portail client inactif", "private")}`;
 }
 
 function renderViewTitle(title, text, actions = "") {
@@ -425,7 +469,7 @@ function renderView() {
 function cockpitMetrics() {
   const projects = visibleProjects();
   const waitingDecisions = db.decisions.filter((d) => projects.some((p) => p.id === d.projectId) && d.status === "En attente").length;
-  const delayed = projects.filter((p) => p.health === "risk").length;
+  const delayed = projects.filter((p) => p.health === "À surveiller" || p.health === "Mauvaise").length;
   const overBudget = projects.filter((p) => budgetTotals(p.id).remaining < 0).length;
   const reportsToPublish = db.reports.filter((r) => projects.some((p) => p.id === r.projectId) && !r.visibleClient).length;
   const urgentTasks = db.tasks.filter((t) => projects.some((p) => p.id === t.projectId) && t.priority === "Haute" && t.status !== "Terminé").length;
@@ -437,7 +481,7 @@ function renderCockpit() {
   const m = cockpitMetrics();
   const avgProfitability = visibleProjects().map(profitability).filter((p) => p.rate).reduce((sum, p, _, arr) => sum + p.rate / arr.length, 0);
   return `
-    ${renderViewTitle(state.role === "admin" ? "Cockpit agence" : "Mes projets assignés", "Tableau de bord multi-projets : activité, tâches globales, prospects, finances récentes et alertes.", `<button data-action="new-project">Créer projet</button><button data-view-jump="planningGlobal">Voir Gantt global</button><button data-view-jump="projects">Ouvrir projets</button>`)}
+    ${renderViewTitle(state.role === "admin" ? "Dashboard agence" : "Espace collaborateur", "Tableau de bord multi-projets : activité, tâches globales, finances récentes et alertes.", `${actionButton("Créer client", 'data-action="new-client"')}${actionButton("Créer projet", 'data-action="new-project"')}${actionButton("Planning global", 'data-view-jump="planningGlobal"')}`)}
     <div class="grid cols-4">
       <div class="kpi"><strong>${m.active}</strong><span>Projets actifs</span></div>
       <div class="kpi"><strong>${m.delayed}</strong><span>Projets à risque</span></div>
@@ -449,16 +493,23 @@ function renderCockpit() {
       <div class="kpi"><strong>${Math.round(avgProfitability)} €/h</strong><span>Rentabilité moyenne</span></div>
     </div>
     <div class="grid cols-2" style="margin-top:14px">
-      <div class="table-card"><h3>Alertes internes</h3>${renderAlerts()}</div>
-      <div class="table-card"><h3>Prochains jalons</h3>${renderMilestones()}</div>
+      <div class="table-card"><h3>Planning Gantt</h3>${renderGantt()}</div>
+      <div class="table-card"><h3>Suivi financier honoraires</h3>${renderFeesTable()}</div>
     </div>
     <div class="grid cols-3" style="margin-top:14px">
+      <div class="table-card"><h3>Alertes internes</h3>${renderAlerts()}</div>
       <div class="table-card"><h3>Projets récents</h3>${renderRecentProjects()}</div>
-      <div class="table-card"><h3>Prospects</h3>${renderRecent("Demandes à suivre", db.prospects.slice(0, 3).map((p) => `${p.name} · ${p.status} · ${p.nextAction}`))}</div>
       <div class="table-card"><h3>Documents financiers récents</h3>${renderRecent("Factures et devis", db.documents.filter((d) => ["Facture", "Devis", "Contrat"].includes(d.type)).map((d) => `${projectName(d.projectId)} · ${d.title}`))}</div>
     </div>
-    <div class="table-card" style="margin-top:14px"><h3>Gantt global multi-projets</h3>${renderGantt()}</div>
   `;
+}
+
+function renderFeesTable() {
+  const projects = visibleProjects();
+  const totalFees = projects.reduce((sum, p) => sum + p.fees, 0);
+  const totalPaid = projects.reduce((sum, p) => sum + p.feesBilled, 0);
+  const rows = projects.map((p) => `<tr><td>${p.name}</td><td>${currentClient(p)?.civility || ""} ${currentClient(p)?.lastName || ""}</td><td>${money(p.fees)}</td><td>${money(p.feesBilled)}</td><td>${money(p.fees - p.feesBilled)}</td></tr>`).join("");
+  return `<div class="table-wrap"><table><thead><tr><th>Projet</th><th>Client</th><th>Honoraires</th><th>Payé</th><th>Reste</th></tr></thead><tbody>${rows}<tr><td><strong>Total</strong></td><td></td><td><strong>${money(totalFees)}</strong></td><td><strong>${money(totalPaid)}</strong></td><td><strong>${money(totalFees - totalPaid)}</strong></td></tr></tbody></table></div>`;
 }
 
 function renderRecentProjects() {
@@ -481,21 +532,34 @@ function renderMilestones() {
 function renderProjects() {
   const rows = visibleProjects().map((p) => {
     const totals = budgetTotals(p.id);
-    const profit = profitability(p);
-    return `<tr><td><strong>${p.name}</strong><br>${currentClient(p)?.firstName || ""} ${currentClient(p)?.lastName || ""}</td><td>${p.address}<br>${p.type}</td><td>${p.phase}<br>${statusBadge(p.status)}</td><td>${p.priority}<br>${statusBadge(p.health === "risk" ? "À surveiller" : "OK")}</td><td>${money(totals.planned)}<br>${p.progress}%</td><td>${currentRole().canSeeProfitability ? `${money(p.fees)}<br>${profit.rate} €/h · ${profit.level}` : badge("Masqué", "private")}</td><td>${p.clientAccess ? badge("Actif", "public") : badge("Inactif", "private")}</td><td><button data-open-project="${p.id}">Ouvrir le projet</button><button data-action="archive-project" data-id="${p.id}">Archiver</button></td></tr>`;
+    const client = currentClient(p);
+    const paid = totals.engaged;
+    const completion = totals.validated ? Math.round((paid / totals.validated) * 100) : p.progress;
+    return `<tr><td><strong>${client?.civility || ""} ${client?.lastName || ""}</strong><br>${client?.firstName || ""}</td><td>${p.name}</td><td>${p.zip || ""} ${p.city || ""}<br>${p.type}</td><td>${p.phase}<br>${statusBadge(p.status)}</td><td>${p.priority}<br>${statusBadge(p.health)}</td><td>${money(totals.validated || totals.planned)}<br>${money(paid)} payé · ${completion}%</td><td>${p.clientAccess ? badge("Actif", "public") : badge("Inactif", "private")}</td><td>${actionButton("Ouvrir le projet", `data-open-project="${p.id}"`)}${actionButton("Visualiser portail client", `data-preview-client="${p.id}"`)}${actionButton("Supprimer", `data-delete-project="${p.id}"`, "danger")}</td></tr>`;
   }).join("");
   return `
-    ${renderViewTitle("Tous les projets", "Recherche, filtre, tri, vue tableau/cartes et ouverture fiche projet.", `<input id="projectSearch" placeholder="Rechercher un projet" /><button data-action="new-project">Créer projet</button><button data-toggle-project-view>${state.viewMode === "table" ? "Vue cartes" : "Vue tableau"}</button>`)}
-    ${state.viewMode === "cards" ? renderProjectCards() : `<div class="table-card table-wrap"><table><thead><tr><th>Projet</th><th>Adresse/type</th><th>Phase/statut</th><th>Priorité/santé</th><th>Budget/avancement</th><th>Rentabilité</th><th>Portail</th><th>Actions</th></tr></thead><tbody>${rows}</tbody></table></div>`}
+    ${renderViewTitle("Projets", "Liste globale de l'agence : filtres, statuts, budgets, portails client et actions.", `<input id="projectSearch" placeholder="Rechercher un projet" /><select aria-label="Filtre phase"><option>Phase</option>${db.phases.map((p) => `<option>${p}</option>`).join("")}</select><select aria-label="Filtre statut"><option>Statut</option><option>À venir</option><option>En cours</option><option>Terminé</option></select><select aria-label="Filtre priorité"><option>Priorité</option><option>Haute</option><option>Normale</option><option>Basse</option></select>${actionButton("Créer projet", 'data-action="new-project"')}${actionButton(state.viewMode === "table" ? "Vue cartes" : "Vue tableau", "data-toggle-project-view")}`)}
+    ${state.viewMode === "cards" ? renderProjectCards() : `<div class="table-card table-wrap"><table><thead><tr><th>Nom client</th><th>Nom projet</th><th>Adresse et type</th><th>Phase / statut</th><th>Priorité / santé</th><th>Budget / avancement</th><th>Portail client</th><th>Actions</th></tr></thead><tbody>${rows}</tbody></table></div>`}
   `;
 }
 
 function renderProjectCards() {
-  return `<div class="grid cols-3">${visibleProjects().map((p) => `<article class="card project-card"><img src="${p.image}" alt="${p.name}" /><div><h3>${p.name}</h3><p>${p.description}</p>${statusBadge(p.status)} ${p.clientAccess ? badge("Portail actif", "public") : badge("Portail inactif", "private")}<div class="actions"><button data-open-project="${p.id}">Ouvrir le projet</button></div></div></article>`).join("")}</div>`;
+  return `<div class="grid cols-3">${visibleProjects().map((p) => `<article class="card project-card"><img src="${p.image}" alt="${p.name}" /><div><h3>${p.name}</h3><p>${p.zip || ""} ${p.city || ""} · ${p.type}</p><p>${p.description}</p>${statusBadge(p.status)} ${statusBadge(p.health)} ${p.clientAccess ? badge("Portail actif", "public") : badge("Portail inactif", "private")}<div class="actions">${actionButton("Ouvrir le projet", `data-open-project="${p.id}"`)}${actionButton("Visualiser portail client", `data-preview-client="${p.id}"`)}${actionButton("Supprimer", `data-delete-project="${p.id}"`, "danger")}</div></div></article>`).join("")}</div>`;
 }
 
 function renderClients() {
   return `${renderViewTitle("Clients", "Base clients simple : coordonnées, préférences, notes internes et projets associés.", `<button data-action="new-client">Créer client</button>`)}
+    <div class="card"><h3>Nouveau client</h3><div class="form-grid">
+      <label>Civilité<select><option>Mme</option><option>M.</option><option>Foyer</option></select></label>
+      <label>Prénom<input placeholder="Claire"></label>
+      <label>Nom<input placeholder="Martin"></label>
+      <label>Email<input type="email" placeholder="client@example.fr"></label>
+      <label>Téléphone<input placeholder="06 ..."></label>
+      <label>Adresse<input placeholder="Adresse"></label>
+      <label>Ville<input placeholder="Paris"></label>
+      <label>Communication préférée<select><option>Portail</option><option>Email</option><option>Téléphone</option></select></label>
+      <label class="full">Notes internes<textarea rows="3" placeholder="Notes non visibles client"></textarea></label>
+    </div></div>
     <div class="table-card table-wrap"><table><thead><tr><th>Client</th><th>Contact</th><th>Adresse</th><th>Communication</th><th>Projets</th><th>Notes internes</th></tr></thead><tbody>${db.clients.map((c) => `<tr><td><strong>${c.firstName} ${c.lastName}</strong></td><td>${c.email}<br>${c.phone}</td><td>${c.address}</td><td>${c.communication}</td><td>${c.projectIds.map(projectName).join(", ")}</td><td>${state.role === "client" ? badge("Masqué", "private") : c.notes}</td></tr>`).join("")}</tbody></table></div>`;
 }
 
@@ -524,7 +588,7 @@ function renderPlanningGlobal() {
 function renderDocumentsGlobal() {
   const projectIds = visibleProjects().map((p) => p.id);
   const docs = db.documents.filter((d) => projectIds.includes(d.projectId));
-  const rows = docs.map((d) => `<tr><td>${projectName(d.projectId)}</td><td>${d.title}</td><td>${d.type}</td><td>${d.phase}</td><td>${d.file}</td><td>${d.date}</td><td>${statusBadge(d.status)}</td><td>${visibilityBadge(d)}</td><td><button data-open-project="${d.projectId}">Ouvrir projet</button></td></tr>`).join("");
+  const rows = docs.map((d) => `<tr><td>${projectName(d.projectId)}</td><td>${d.title}</td><td>${d.type}</td><td>${d.phase}</td><td>${d.file}</td><td>${d.date}</td><td>${statusBadge(d.status === "Publié" ? "Finalisé" : d.status)}</td><td>${visibilityBadge(d)}</td><td>${actionButton("Ouvrir projet", `data-open-project="${d.projectId}"`)}${actionButton("Voir document", 'data-action="view-document"')}${actionButton(d.visibleClient ? "Masquer" : "Publier", `data-doc-publish="${d.id}"`, d.visibleClient ? "" : "success")}${actionButton("Supprimer", 'data-action="delete-document"', "danger")}</td></tr>`).join("");
   return `${renderViewTitle("Documents globaux", "Bibliothèque agence transversale : factures, devis, contrats, plans, rendus et comptes rendus.", `<button data-action="new-document">Ajouter document</button>`)}
     <div class="table-card table-wrap"><table><thead><tr><th>Projet</th><th>Titre</th><th>Type</th><th>Phase</th><th>Fichier</th><th>Date</th><th>Statut</th><th>Visibilité</th><th>Action</th></tr></thead><tbody>${rows}</tbody></table></div>`;
 }
@@ -535,7 +599,7 @@ function renderOverview() {
   const totals = budgetTotals(p.id);
   const decisions = byProject(db.decisions).filter((d) => d.status === "En attente");
   return `
-    ${renderViewTitle(p.name, "Vue d'ensemble du projet : budget, décisions, documents, messages et alertes.", `<button data-ai-summary="admin">Résumé IA agence</button><button data-ai-summary="client">Résumé IA client</button><button data-action="publish-overview">Publier synthèse</button>`)}
+    ${renderViewTitle(p.name, "Vue d'ensemble du projet : budget, décisions, documents, messages et alertes.", `<button data-ai-summary="admin">Résumé IA projet</button><button data-ai-summary="client">Résumé client</button><button data-action="new-document">Nouveau document</button><button data-action="new-meeting">Réunion à planifier</button><button data-action="publish-overview">Publier synthèse</button><button data-action="print-export">Exporter / imprimer</button>`)}
     <div class="grid cols-4">
       <div class="kpi"><strong>${p.progress}%</strong><span>Avancement</span></div>
       <div class="kpi"><strong>${money(totals.planned)}</strong><span>Budget prévu</span></div>
@@ -615,8 +679,8 @@ function renderShopping() {
 
 function renderBudget() {
   const totals = budgetTotals();
-  const rows = byProject(db.budgets).filter((b) => state.role !== "client" || b.published).map((b) => `<tr><td>${b.lot}</td><td>${b.room}</td><td>${money(b.planned)}</td><td>${money(b.validated)}</td><td>${money(b.engaged)}</td><td>${money(b.validated - b.engaged)}</td><td>${b.source}</td><td>${b.published ? badge("Publié", "public") : badge("Interne", "private")}</td></tr>`).join("");
-  return `${renderViewTitle(state.role === "client" ? "Budget partagé" : "Budget", "Budget propre au projet ouvert, relié aux achats, devis et factures analysées.", `<button data-action="new-budget-line">Ajouter ligne</button>`)}
+  const rows = byProject(db.budgets).filter((b) => !isClientSurface() || b.published).map((b) => `<tr><td>${b.lot}</td><td>${b.room}</td><td>${money(b.planned)}</td><td>${money(b.validated)}</td><td>${money(b.engaged)}</td><td>${money(b.validated - b.engaged)}</td><td>${b.source}</td><td>${b.published ? badge("Publié", "public") : badge("Interne", "private")}</td></tr>`).join("");
+  return `${renderViewTitle(isClientSurface() ? "Budget partagé" : "Budget", "Budget propre au projet ouvert, relié aux achats, devis et factures analysées.", !isClientSurface() ? `<button data-action="new-budget-line">Ajouter ligne</button>` : "")}
     <div class="grid cols-4"><div class="kpi"><strong>${money(totals.planned)}</strong><span>Prévu</span></div><div class="kpi"><strong>${money(totals.validated)}</strong><span>Validé</span></div><div class="kpi"><strong>${money(totals.engaged)}</strong><span>Engagé</span></div><div class="kpi"><strong>${money(totals.remaining)}</strong><span>Reste</span></div></div>
     <div class="table-card table-wrap" style="margin-top:14px"><table><thead><tr><th>Lot</th><th>Pièce</th><th>Prévu</th><th>Validé</th><th>Engagé</th><th>Reste</th><th>Source</th><th>Publication</th></tr></thead><tbody>${rows}</tbody></table></div>`;
 }
@@ -637,7 +701,7 @@ function renderDecisions() {
 }
 
 function renderTasks() {
-  if (state.role === "client") return emptyView("Tâches internes", "Les tâches internes ne sont jamais visibles côté client.");
+  if (isClientSurface()) return emptyView("Tâches internes", "Les tâches internes ne sont jamais visibles côté client.");
   const rows = byProject(db.tasks).map((t) => `<tr><td>${t.title}</td><td>${t.owner}</td><td>${t.priority}</td><td>${t.due}</td><td>${statusBadge(t.status)}</td><td>${t.phase}</td><td>${t.comment}</td></tr>`).join("");
   return tableView("Tâches internes", "Tâches strictement internes, liées aux phases et décisions.", ["Titre", "Responsable", "Priorité", "Échéance", "Statut", "Phase", "Commentaire"], rows);
 }
@@ -654,14 +718,14 @@ function renderReports() {
 }
 
 function renderDocuments() {
-  const rows = byProject(db.documents).filter(isVisibleClient).map((d) => `<tr><td>${d.title}</td><td>${d.type}</td><td>${d.phase}</td><td>${d.file}</td><td>${d.date}</td><td>${d.version}</td><td>${statusBadge(d.status)}</td><td>${visibilityBadge(d)}</td><td>${state.role !== "client" ? `<button data-doc-publish="${d.id}">${d.visibleClient ? "Masquer" : "Publier"}</button>` : "<button>Télécharger</button>"}</td></tr>`).join("");
-  return `${renderViewTitle("Documents", "Bibliothèque filtrable : contrats, devis, factures, plans, rendus, photos, CR et documents internes.", `<button data-action="new-document">Ajouter document</button>`)}
+  const rows = byProject(db.documents).filter(isVisibleClient).map((d) => `<tr><td>${d.title}</td><td>${d.type}</td><td>${d.phase}</td><td>${d.file}</td><td>${d.date}</td><td>${d.version}</td><td>${statusBadge(d.status)}</td><td>${visibilityBadge(d)}</td><td>${!isClientSurface() ? `<button data-doc-publish="${d.id}">${d.visibleClient ? "Masquer" : "Publier"}</button>` : "<button>Télécharger</button>"}</td></tr>`).join("");
+  return `${renderViewTitle("Documents", "Bibliothèque filtrable : contrats, devis, factures, plans, rendus, photos, CR et documents internes.", !isClientSurface() ? `<button data-action="new-document">Ajouter document</button>` : "")}
     ${renderDocumentImport()}
     <div class="table-card table-wrap" style="margin-top:14px"><table><thead><tr><th>Titre</th><th>Type</th><th>Phase</th><th>Fichier</th><th>Date</th><th>Version</th><th>Statut</th><th>Visibilité</th><th>Action</th></tr></thead><tbody>${rows}</tbody></table></div>`;
 }
 
 function renderDocumentImport() {
-  if (state.role === "client") return "";
+  if (isClientSurface()) return "";
   return `<div class="card"><h3>Analyse documentaire IA limitée</h3><p>Fonction IA 2 : lecture / extraction / analyse de documents. L'intégration n'est jamais automatique : validez les lignes avant ajout.</p>
     <div class="form-grid">
       <label>Type document<select id="docType"><option value="invoice">Facture</option><option value="quote">Devis</option><option value="other">Autre</option></select></label>
@@ -674,7 +738,7 @@ function renderDocumentImport() {
 }
 
 function renderMessages() {
-  const visible = byProject(db.messages).filter((m) => state.role !== "client" || !m.internal);
+  const visible = byProject(db.messages).filter((m) => !isClientSurface() || !m.internal);
   return `${renderViewTitle("Messages", "Fil projet avec messages agence, client, internes et liens vers décisions.", `<button data-action="new-message">Ajouter message</button>`)}
     <div class="grid">${visible.map((m) => `<div class="card"><strong>${m.author}</strong> ${badge(m.internal ? "Interne" : "Projet", m.internal ? "private" : "public")}<p>${m.text}</p><small>${m.at}${m.linked ? ` · lié à ${m.linked}` : ""}</small></div>`).join("") || `<div class="empty">Aucun message.</div>`}</div>`;
 }
@@ -713,12 +777,25 @@ function renderTemplates() {
 }
 
 function renderSettings() {
-  return `${renderViewTitle("Paramètres", "Rôles, permissions, charte, seuils rentabilité, statuts et paramètres globaux.")}
+  const accessRows = db.accessAccounts.map((u) => `<tr><td><strong>${u.name}</strong><br>${u.identifier}</td><td>${u.role}</td><td>${u.projectId ? projectName(u.projectId) : "Agence"}</td><td>${u.passwordMasked}</td><td>${statusBadge(u.status)}</td><td>${u.permissions}</td><td>${actionButton("Modifier", `data-action="edit-access" data-id="${u.id}"`)}${actionButton("Réinitialiser", `data-action="reset-client-code" data-id="${u.id}"`)}${actionButton(u.status === "Actif" ? "Désactiver" : "Réactiver", `data-action="${u.status === "Actif" ? "disable-access" : "enable-access"}" data-id="${u.id}"`, u.status === "Actif" ? "danger" : "success")}</td></tr>`).join("");
+  return `${renderViewTitle("Paramètres", "Utilisateurs, identifiants, permissions, charte, statuts et seuils internes.", `${actionButton("Créer utilisateur", 'data-action="new-user"')}${actionButton("Enregistrer", 'data-action="save-settings"')}`)}
     <div class="grid cols-2">
-      <div class="card"><h3>Utilisateurs & rôles</h3>${db.users.map((u) => `<p><strong>${u.name}</strong><br>${u.role} · ${u.email} · ${u.status}<br>Projets : ${u.projects}</p>`).join("")}<button data-action="new-user">Créer utilisateur</button></div>
-      <div class="card"><h3>Seuils rentabilité</h3><p>Bonne : ${db.settings.profitability.good} €/h<br>Moyenne : ${db.settings.profitability.medium} €/h<br>Faible : ${db.settings.profitability.weak} €/h</p><button data-action="save-settings">Enregistrer</button></div>
-      <div class="card"><h3>Charte</h3>${Object.entries(db.settings.brand).map(([k, v]) => `<span class="badge" style="background:${v};color:var(--beige)">${k} ${v}</span>`).join(" ")}</div>
-      <div class="card"><h3>Statuts</h3><p>${db.settings.statuses.join(" · ")}</p></div>
+      <div class="card full-span"><h3>Utilisateurs & accès</h3><div class="table-wrap"><table><thead><tr><th>Identifiant</th><th>Rôle</th><th>Projet lié</th><th>Mot de passe</th><th>Statut</th><th>Permissions</th><th>Actions</th></tr></thead><tbody>${accessRows}</tbody></table></div></div>
+      <div class="card full-span"><h3>Créer un accès client</h3><div class="form-grid">
+        <label>Nom client / foyer<input id="accessName" placeholder="Foyer London"></label>
+        <label>Projet rattaché<select id="accessProject">${db.projects.map((p) => `<option value="${p.id}">${p.name}</option>`).join("")}</select></label>
+        <label>Email ou identifiant<input id="accessIdentifier" placeholder="client.london@example.fr ou PROJET-LONDON"></label>
+        <label>Rôle<select><option>client</option></select></label>
+        <label>Portail actif<select id="accessPortal"><option>Oui</option><option>Non</option></select></label>
+        <label>Statut<select id="accessStatus"><option>Actif</option><option>Inactif</option></select></label>
+        <label>Premier mot de passe / code<input id="accessPassword" type="password"></label>
+        <label>Confirmation<input id="accessPasswordConfirm" type="password"></label>
+        <label class="full"><input type="checkbox" id="accessForceChange"> Forcer le changement du mot de passe à la première connexion</label>
+      </div><div class="actions">${actionButton("Créer accès client", 'data-action="create-client-access"', "success")}</div></div>
+      <div class="card"><h3>Permissions collaborateur</h3><p>Lecture seule, modification, publication côté client, comptes rendus, shopping list, tâches, budget visible client, documents internes, temps/rentabilité si autorisé.</p>${actionButton("Modifier permissions", 'data-action="edit-permissions"')}</div>
+      <div class="card"><h3>Seuils rentabilité</h3><p>Bonne : ${db.settings.profitability.good} €/h<br>Moyenne : ${db.settings.profitability.medium} €/h<br>Faible : ${db.settings.profitability.weak} €/h<br>Non rentable : sous ${db.settings.profitability.weak} €/h</p></div>
+      <div class="card"><h3>Charte</h3><p>Blair TTC / Acumin Variable Concept avec Poppins en alternative web. Aucune police manuscrite n'est utilisée dans le portail.</p>${Object.entries(db.settings.brand).map(([k, v]) => `<span class="badge" style="background:${v};color:var(--beige)">${k} ${v}</span>`).join(" ")}</div>
+      <div class="card"><h3>Statuts éditables</h3><p><strong>Phases</strong><br>${db.phases.join(" · ")}</p><p><strong>Documents</strong><br>Brouillon · Finalisé · Archivé</p><p><strong>Produits</strong><br>Idée interne · Proposé au client · Validé · Refusé · Alternative demandée · À commander · Commandé · Reçu · Installé</p></div>
     </div>`;
 }
 
@@ -738,7 +815,7 @@ function renderGantt() {
   const columns = db.phases;
   return `<div class="gantt"><div class="gantt-head"><span>Projet</span>${columns.map((c) => `<span>${c.split(" ")[0]}</span>`).join("")}</div>${visibleProjects().map((p) => {
     const activeIndex = columns.indexOf(p.phase);
-    return `<div class="gantt-row"><span class="gantt-name">${p.name}</span>${columns.map((phase, index) => `<span class="gantt-cell">${index <= activeIndex ? `<i class="gantt-bar ${p.health === "risk" && index === activeIndex ? "warn" : ""}" style="width:${index === activeIndex ? p.progress : 100}%">${index === activeIndex ? `${p.progress}%` : "✓"}</i>` : ""}</span>`).join("")}</div>`;
+    return `<div class="gantt-row"><span class="gantt-name">${p.name}</span>${columns.map((phase, index) => `<span class="gantt-cell">${index <= activeIndex ? `<i class="gantt-bar ${p.health === "À surveiller" && index === activeIndex ? "warn" : ""}" style="width:${index === activeIndex ? p.progress : 100}%">${index === activeIndex ? `${p.progress}%` : "✓"}</i>` : ""}</span>`).join("")}</div>`;
   }).join("")}</div>`;
 }
 
@@ -747,7 +824,7 @@ function projectName(id) {
 }
 
 function budgetTotals(projectId = state.activeProjectId) {
-  const lines = byProject(db.budgets, projectId).filter((b) => state.role !== "client" || b.published);
+  const lines = byProject(db.budgets, projectId).filter((b) => !isClientSurface() || b.published);
   const planned = lines.reduce((sum, l) => sum + l.planned, 0);
   const validated = lines.reduce((sum, l) => sum + l.validated, 0);
   const engaged = lines.reduce((sum, l) => sum + l.engaged, 0);
@@ -764,6 +841,8 @@ function profitability(project) {
 
 function bindViewActions() {
   $$("[data-open-project]").forEach((btn) => btn.addEventListener("click", () => enterProject(btn.dataset.openProject)));
+  $$("[data-preview-client]").forEach((btn) => btn.addEventListener("click", () => previewClientPortal(btn.dataset.previewClient)));
+  $$("[data-delete-project]").forEach((btn) => btn.addEventListener("click", () => confirmDeleteProject(btn.dataset.deleteProject)));
   $$("[data-view-jump]").forEach((btn) => btn.addEventListener("click", () => { state.view = btn.dataset.viewJump; renderApp(); }));
   $$("[data-toggle-project-view]").forEach((btn) => btn.addEventListener("click", () => { state.viewMode = state.viewMode === "table" ? "cards" : "table"; renderApp(); }));
   $$("[data-action]").forEach((btn) => btn.addEventListener("click", () => handleAction(btn.dataset.action, btn.dataset.id)));
@@ -781,14 +860,35 @@ function bindViewActions() {
 
 function enterProject(projectId, view = "overview") {
   if (!visibleProjects().some((p) => p.id === projectId)) return;
+  state.previewClient = false;
   state.activeProjectId = projectId;
   state.view = view;
   renderApp();
   toast(`${projectName(projectId)} ouvert.`);
 }
 
+function previewClientPortal(projectId) {
+  if (!visibleProjects().some((p) => p.id === projectId)) return;
+  state.activeProjectId = projectId;
+  state.previewClient = true;
+  state.view = "clientHome";
+  renderApp();
+  toast(`Prévisualisation du portail client : ${projectName(projectId)}.`);
+}
+
+function confirmDeleteProject(projectId) {
+  const project = db.projects.find((p) => p.id === projectId);
+  if (!project) return;
+  if (window.confirm(`Supprimer ${project.name} en mode démo ? Cette action demande confirmation.`)) {
+    project.status = "Archivé";
+    toast(`${project.name} marqué comme archivé en mode démo.`);
+    renderApp();
+  }
+}
+
 function handleAction(action) {
   const project = currentProject();
+  if (action === "create-client-access") return createClientAccess();
   const messages = {
     "new-project": "Projet de démonstration créé.",
     "archive-project": `${project?.name || "Projet"} archivé en mode démo.`,
@@ -803,11 +903,18 @@ function handleAction(action) {
     "new-site-point": "Point chantier ajouté en mode démo.",
     "print-report": "Préparation impression compte rendu.",
     "new-document": "Document interne ajouté.",
+    "view-document": "Document ouvert en aperçu démo.",
+    "delete-document": "Suppression document confirmée en mode démo.",
+    "new-meeting": "Réunion projet planifiée en mode démo.",
     "new-message": "Message projet ajouté.",
     "new-time": "Entrée temps ajoutée.",
     "print-export": "Préparation export imprimable.",
     "reset-client-code": "Code client réinitialisé en mode démo.",
     "toggle-client-access": "Accès client modifié en mode démo.",
+    "disable-access": "Accès désactivé en mode démo.",
+    "enable-access": "Accès réactivé en mode démo.",
+    "edit-access": "Édition de l'accès ouverte en mode démo.",
+    "edit-permissions": "Permissions collaborateur mises à jour en mode démo.",
     "new-template": "Modèle ajouté.",
     "edit-template": "Édition modèle ouverte.",
     "new-user": "Utilisateur de démonstration créé.",
@@ -815,6 +922,22 @@ function handleAction(action) {
   };
   if (action?.includes("print")) window.print();
   toast(messages[action] || "Action réalisée en mode démo.");
+}
+
+function createClientAccess() {
+  const name = $("#accessName")?.value.trim();
+  const identifier = $("#accessIdentifier")?.value.trim();
+  const password = $("#accessPassword")?.value;
+  const confirm = $("#accessPasswordConfirm")?.value;
+  if (!name || !identifier) return toast("Nom et identifiant obligatoires.");
+  if (!password) return toast("Mot de passe initial obligatoire.");
+  if (password !== confirm) return toast("Les mots de passe ne correspondent pas.");
+  if (demoUsers[identifier] || db.accessAccounts.some((account) => account.identifier === identifier)) return toast("Identifiant déjà existant.");
+  const projectId = $("#accessProject").value;
+  db.accessAccounts.push({ id: `acc-${Date.now()}`, name, identifier, role: "client", projectId, status: $("#accessStatus").value, passwordMasked: "••••••••", forceChange: $("#accessForceChange").checked, permissions: "Portail client publié" });
+  demoUsers[identifier] = { password, role: "client", name, projectId };
+  toast("Accès client créé en mode démo. Mot de passe masqué dans le tableau.");
+  renderApp();
 }
 
 function toggleDocument(id) {
@@ -957,16 +1080,20 @@ function init() {
   renderPublicProjects();
   $$("[data-open-login]").forEach((button) => button.addEventListener("click", openLogin));
   $("#mobileToggle").addEventListener("click", () => $("#siteMenu").classList.toggle("open"));
-  $$("[data-demo-login]").forEach((button) => button.addEventListener("click", () => {
-    $("#loginId").value = button.dataset.demoLogin;
-    $("#loginPassword").value = "demo";
-  }));
   $("#loginForm").addEventListener("submit", (event) => {
     event.preventDefault();
     login($("#loginId").value.trim(), $("#loginPassword").value);
   });
+  $("#forgotPasswordBtn").addEventListener("click", () => $("#forgotModal").showModal());
+  $("#forgotForm").addEventListener("submit", (event) => {
+    event.preventDefault();
+    $("#forgotModal").close();
+    toast("Si ce compte existe, un email de réinitialisation a été envoyé.");
+  });
+  $("#loginBackSiteBtn").addEventListener("click", () => $("#loginModal").close());
+  $("#workspaceHomeBtn").addEventListener("click", goDashboard);
   $("#logoutBtn").addEventListener("click", logout);
-  $("#backToSiteBtn").addEventListener("click", () => { $("#app").classList.add("hidden"); $("#publicSite").classList.remove("hidden"); });
+  $("#backToSiteBtn").addEventListener("click", returnToPublicSite);
   $("#printBtn").addEventListener("click", () => window.print());
   $("#contactForm").addEventListener("submit", (event) => { event.preventDefault(); toast("Demande enregistrée en mode démo."); event.target.reset(); });
 }
