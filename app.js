@@ -16,7 +16,14 @@ const state = {
   demoUser: null,
   viewMode: "table",
   previewClient: false,
-  clientValidator: "Client London"
+  clientValidator: "Client London",
+  showClientForm: false,
+  filters: {
+    global: "",
+    projects: { query: "", phase: "", status: "", priority: "" },
+    clients: "",
+    documents: ""
+  }
 };
 
 const roles = {
@@ -202,7 +209,7 @@ const globalNav = [
   { view: "projects", label: "PROJETS" },
   { view: "clients", label: "CLIENTS" },
   { view: "financeGlobal", label: "FINANCES" },
-  { view: "planningGlobal", label: "Planning global" },
+  { view: "planningGlobal", label: "PLANNING GLOBAL" },
   { view: "documentsGlobal", label: "DOCUMENTS" },
   { view: "settings", label: "PARAMETRE" }
 ];
@@ -297,6 +304,38 @@ function actionButton(label, attrs = "", tone = "") {
   return `<button type="button" class="${tone ? `btn-${tone}` : ""}" ${attrs}>${label}</button>`;
 }
 
+function moreActions(items) {
+  return `<details class="more-actions"><summary aria-label="Options">...</summary><div>${items.join("")}</div></details>`;
+}
+
+function searchableText(...values) {
+  return values.filter(Boolean).join(" ").toLowerCase();
+}
+
+function filteredProjects() {
+  const { query, phase, status, priority } = state.filters.projects;
+  const global = state.filters.global;
+  const q = (query || global || "").trim().toLowerCase();
+  return visibleProjects().filter((p) => {
+    const client = currentClient(p);
+    const text = searchableText(p.name, p.type, p.address, p.zip, p.city, p.phase, p.status, p.priority, p.health, client?.firstName, client?.lastName, client?.email);
+    return (!q || text.includes(q))
+      && (!phase || p.phase === phase)
+      && (!status || p.status === status)
+      && (!priority || p.priority === priority);
+  });
+}
+
+function filteredClients() {
+  const q = (state.filters.clients || state.filters.global || "").trim().toLowerCase();
+  return db.clients.filter((c) => !q || searchableText(c.civility, c.firstName, c.lastName, c.email, c.phone, c.address, c.city, c.notes, ...c.projectIds.map(projectName)).includes(q));
+}
+
+function filteredDocuments(docs) {
+  const q = (state.filters.documents || state.filters.global || "").trim().toLowerCase();
+  return docs.filter((d) => !q || searchableText(projectName(d.projectId), d.title, d.type, d.phase, d.file, d.status).includes(q));
+}
+
 function visibilityBadge(item) {
   return item.visibleClient || item.published || item.status === "Publié" ? badge("Visible client", "public") : badge("Interne uniquement", "private");
 }
@@ -386,13 +425,24 @@ function renderSidebar() {
     const nav = state.role === "collaborator" ? collaboratorProjectNav : projectNav;
     $("#sidebar").innerHTML = `
       <h3>Agence</h3>
-      <label class="sidebar-search">Recherche<input placeholder="Projet, client, document"></label>
+      <form class="sidebar-search" id="globalSearchForm"><label>Recherche<input id="globalSearch" value="${state.filters.global}" placeholder="Projet, client, document"></label></form>
       ${(state.role === "collaborator" ? globalNav.filter((item) => !["financeGlobal", "settings"].includes(item.view)) : globalNav).map((item) => `<button type="button" data-view="${item.view}" class="${state.view === item.view || (item.view === "projects" && hasProjectContext()) ? "active" : ""}">${item.label}</button>`).join("")}
       ${hasProjectContext() ? `<h3>Projet / ${project.name.replace("Projet ", "")}</h3>${nav.map(([view, label]) => `<button type="button" data-view="${view}" class="${state.view === view ? "active" : ""}">${label}</button>`).join("")}` : ""}
     `;
   }
+  const globalSearchForm = $("#globalSearchForm");
+  if (globalSearchForm) globalSearchForm.addEventListener("submit", (event) => {
+    event.preventDefault();
+    state.filters.global = $("#globalSearch").value.trim();
+    state.activeProjectId = null;
+    state.previewClient = false;
+    state.showClientForm = false;
+    state.view = "projects";
+    renderApp();
+  });
   $$("[data-view]").forEach((button) => button.addEventListener("click", () => {
     state.view = button.dataset.view;
+    if (state.view === "clients") state.showClientForm = false;
     if (state.role !== "client" && !state.previewClient && !projectViews.has(state.view)) state.activeProjectId = null;
     if (!projectViews.has(state.view)) state.previewClient = false;
     renderApp();
@@ -479,15 +529,10 @@ function cockpitMetrics() {
 
 function renderCockpit() {
   return `
-    ${renderViewTitle(state.role === "admin" ? "Dashboard" : "Espace collaborateur", "Vue globale de l'agence : planning multi-projets et suivi financier des honoraires.", `${actionButton("Créer client", 'data-action="new-client"')}${actionButton("Créer projet", 'data-action="new-project"')}${actionButton("Planning global", 'data-view-jump="planningGlobal"')}`)}
+    ${renderViewTitle(state.role === "admin" ? "Dashboard" : "Espace collaborateur", "Vue globale de l'agence : planning multi-projets et suivi financier des honoraires.", `${actionButton("Créer client", 'data-action="new-client"', "compact")}${actionButton("Créer projet", 'data-action="new-project"', "compact")}`)}
     <div class="grid cols-2 dashboard-focus">
       <div class="table-card dashboard-panel"><h3>Gantt Global</h3>${renderGantt()}</div>
       <div class="table-card dashboard-panel"><h3>Suivi financier</h3>${renderFeesTable()}</div>
-    </div>
-    <div class="grid cols-3 dashboard-strip">
-      <div class="kpi"><strong>${visibleProjects().filter((p) => p.status !== "Terminé").length}</strong><span>Projets en cours</span></div>
-      <div class="kpi"><strong>${db.decisions.filter((d) => d.status === "En attente").length}</strong><span>Décisions en attente</span></div>
-      <div class="kpi"><strong>${money(visibleProjects().reduce((sum, p) => sum + Math.max(p.fees - p.feesBilled, 0), 0))}</strong><span>Reste honoraires</span></div>
     </div>
   `;
 }
@@ -518,26 +563,37 @@ function renderMilestones() {
 }
 
 function renderProjects() {
-  const rows = visibleProjects().map((p) => {
+  const projects = filteredProjects();
+  const rows = projects.map((p) => {
     const totals = budgetTotals(p.id);
     const client = currentClient(p);
     const paid = totals.engaged;
     const completion = totals.validated ? Math.round((paid / totals.validated) * 100) : p.progress;
-    return `<tr><td><strong>${client?.civility || ""} ${client?.lastName || ""}</strong><br>${client?.firstName || ""}</td><td>${p.name}</td><td>${p.zip || ""} ${p.city || ""}<br>${p.type}</td><td>${p.phase}<br>${statusBadge(p.status)}</td><td>${p.priority}<br>${statusBadge(p.health)}</td><td>${money(totals.validated || totals.planned)}<br>${money(paid)} payé · ${completion}%</td><td>${p.clientAccess ? badge("Actif", "public") : badge("Inactif", "private")}</td><td>${actionButton("Ouvrir le projet", `data-open-project="${p.id}"`)}${actionButton("Visualiser portail client", `data-preview-client="${p.id}"`)}${actionButton("Supprimer", `data-delete-project="${p.id}"`, "danger")}</td></tr>`;
+    return `<tr><td><strong>${client?.civility || ""} ${client?.lastName || ""}</strong><br>${client?.firstName || ""}</td><td>${p.name}</td><td>${p.zip || ""} ${p.city || ""}<br>${p.type}</td><td>${p.phase}<br>${statusBadge(p.status)}</td><td>${p.priority}<br>${statusBadge(p.health)}</td><td>${money(totals.validated || totals.planned)}<br>${money(paid)} payé · ${completion}%</td><td>${p.clientAccess ? badge("Actif", "public") : badge("Inactif", "private")}</td><td class="table-actions">${actionButton("Ouvrir le projet", `data-open-project="${p.id}"`, "compact")}${moreActions([actionButton("Visualiser portail client", `data-preview-client="${p.id}"`), actionButton("Supprimer", `data-delete-project="${p.id}"`, "danger")])}</td></tr>`;
   }).join("");
+  const f = state.filters.projects;
   return `
-    ${renderViewTitle("Projets", "Liste globale de l'agence : filtres, statuts, budgets, portails client et actions.", `<input id="projectSearch" placeholder="Rechercher un projet" /><select aria-label="Filtre phase"><option>Phase</option>${db.phases.map((p) => `<option>${p}</option>`).join("")}</select><select aria-label="Filtre statut"><option>Statut</option><option>À venir</option><option>En cours</option><option>Terminé</option></select><select aria-label="Filtre priorité"><option>Priorité</option><option>Haute</option><option>Normale</option><option>Basse</option></select>${actionButton("Créer projet", 'data-action="new-project"')}${actionButton(state.viewMode === "table" ? "Vue cartes" : "Vue tableau", "data-toggle-project-view")}`)}
-    ${state.viewMode === "cards" ? renderProjectCards() : `<div class="table-card table-wrap"><table><thead><tr><th>Nom client</th><th>Nom projet</th><th>Adresse et type</th><th>Phase / statut</th><th>Priorité / santé</th><th>Budget / avancement</th><th>Portail client</th><th>Actions</th></tr></thead><tbody>${rows}</tbody></table></div>`}
+    ${renderViewTitle("Projets", "Liste globale de l'agence : filtres, statuts, budgets, portails client et actions.", `${actionButton("Créer projet", 'data-action="new-project"', "compact")}${actionButton(state.viewMode === "table" ? "Vue cartes" : "Vue tableau", "data-toggle-project-view", "ghost")}`)}
+    <form class="filter-bar" id="projectFilters">
+      <input name="query" value="${f.query}" placeholder="Rechercher un projet, client ou ville" />
+      <select name="phase" aria-label="Filtre phase"><option value="">Toutes phases</option>${db.phases.map((p) => `<option value="${p}" ${f.phase === p ? "selected" : ""}>${p}</option>`).join("")}</select>
+      <select name="status" aria-label="Filtre statut"><option value="">Tous statuts</option>${["À venir", "En cours", "Terminé"].map((s) => `<option value="${s}" ${f.status === s ? "selected" : ""}>${s}</option>`).join("")}</select>
+      <select name="priority" aria-label="Filtre priorité"><option value="">Toutes priorités</option>${["Haute", "Normale", "Basse"].map((p) => `<option value="${p}" ${f.priority === p ? "selected" : ""}>${p}</option>`).join("")}</select>
+      <button type="submit" class="btn-compact">Rechercher</button>
+    </form>
+    ${state.viewMode === "cards" ? renderProjectCards(projects) : `<div class="table-card table-wrap"><table><thead><tr><th>Nom client</th><th>Nom projet</th><th>Adresse et type</th><th>Phase / statut</th><th>Priorité / santé</th><th>Budget / avancement</th><th>Portail client</th><th>Actions</th></tr></thead><tbody>${rows || `<tr><td colspan="8"><div class="empty">Aucun projet ne correspond à cette recherche.</div></td></tr>`}</tbody></table></div>`}
   `;
 }
 
-function renderProjectCards() {
-  return `<div class="grid cols-3">${visibleProjects().map((p) => `<article class="card project-card"><img src="${p.image}" alt="${p.name}" /><div><h3>${p.name}</h3><p>${p.zip || ""} ${p.city || ""} · ${p.type}</p><p>${p.description}</p>${statusBadge(p.status)} ${statusBadge(p.health)} ${p.clientAccess ? badge("Portail actif", "public") : badge("Portail inactif", "private")}<div class="actions">${actionButton("Ouvrir le projet", `data-open-project="${p.id}"`)}${actionButton("Visualiser portail client", `data-preview-client="${p.id}"`)}${actionButton("Supprimer", `data-delete-project="${p.id}"`, "danger")}</div></div></article>`).join("")}</div>`;
+function renderProjectCards(projects = filteredProjects()) {
+  return `<div class="grid cols-3">${projects.map((p) => `<article class="card project-card"><img src="${p.image}" alt="${p.name}" /><div><h3>${p.name}</h3><p>${p.zip || ""} ${p.city || ""} · ${p.type}</p><p>${p.description}</p>${statusBadge(p.status)} ${statusBadge(p.health)} ${p.clientAccess ? badge("Portail actif", "public") : badge("Portail inactif", "private")}<div class="actions">${actionButton("Ouvrir le projet", `data-open-project="${p.id}"`, "compact")}${moreActions([actionButton("Visualiser portail client", `data-preview-client="${p.id}"`), actionButton("Supprimer", `data-delete-project="${p.id}"`, "danger")])}</div></div></article>`).join("") || `<div class="empty">Aucun projet ne correspond à cette recherche.</div>`}</div>`;
 }
 
 function renderClients() {
-  return `${renderViewTitle("Clients", "Base clients simple : coordonnées, préférences, notes internes et projets associés.", `<button data-action="new-client">Créer client</button>`)}
-    <div class="card"><h3>Nouveau client</h3><div class="form-grid">
+  const clients = filteredClients();
+  return `${renderViewTitle("Clients", "Base clients simple : coordonnées, préférences, notes internes et projets associés.", `<button class="btn-compact" data-action="new-client">Créer client</button>`)}
+    <form class="filter-bar" id="clientFilters"><input name="query" value="${state.filters.clients}" placeholder="Rechercher un client, email, téléphone ou projet" /><button type="submit" class="btn-compact">Rechercher</button></form>
+    ${state.showClientForm ? `<div class="card"><h3>Nouveau client</h3><div class="form-grid">
       <label>Civilité<select><option>Mme</option><option>M.</option><option>Foyer</option></select></label>
       <label>Prénom<input placeholder="Claire"></label>
       <label>Nom<input placeholder="Martin"></label>
@@ -547,8 +603,8 @@ function renderClients() {
       <label>Ville<input placeholder="Paris"></label>
       <label>Communication préférée<select><option>Portail</option><option>Email</option><option>Téléphone</option></select></label>
       <label class="full">Notes internes<textarea rows="3" placeholder="Notes non visibles client"></textarea></label>
-    </div></div>
-    <div class="table-card table-wrap"><table><thead><tr><th>Client</th><th>Contact</th><th>Adresse</th><th>Communication</th><th>Projets</th><th>Notes internes</th></tr></thead><tbody>${db.clients.map((c) => `<tr><td><strong>${c.firstName} ${c.lastName}</strong></td><td>${c.email}<br>${c.phone}</td><td>${c.address}</td><td>${c.communication}</td><td>${c.projectIds.map(projectName).join(", ")}</td><td>${state.role === "client" ? badge("Masqué", "private") : c.notes}</td></tr>`).join("")}</tbody></table></div>`;
+    </div></div>` : ""}
+    <div class="table-card table-wrap"><table><thead><tr><th>Client</th><th>Contact</th><th>Adresse</th><th>Communication</th><th>Projets</th><th>Notes internes</th></tr></thead><tbody>${clients.map((c) => `<tr><td><strong>${c.civility || ""} ${c.firstName} ${c.lastName}</strong></td><td>${c.email}<br>${c.phone}</td><td>${c.address}<br>${c.zip || ""} ${c.city || ""}</td><td>${c.communication}</td><td>${c.projectIds.map(projectName).join(", ")}</td><td>${state.role === "client" ? badge("Masqué", "private") : c.notes}</td></tr>`).join("") || `<tr><td colspan="6"><div class="empty">Aucun client ne correspond à cette recherche.</div></td></tr>`}</tbody></table></div>`;
 }
 
 function renderProspects() {
@@ -561,24 +617,25 @@ function renderFinanceGlobal() {
   const rows = projects.map((p) => {
     const totals = budgetTotals(p.id);
     const profit = profitability(p);
-    return `<tr><td><button data-open-project="${p.id}">${p.name}</button></td><td>${money(totals.planned)}</td><td>${money(totals.validated)}</td><td>${money(totals.engaged)}</td><td>${money(totals.remaining)}</td><td>${currentRole().canSeeProfitability ? `${profit.rate} €/h · ${profit.level}` : badge("Masqué", "private")}</td><td>${p.clientAccess ? badge("Portail actif", "public") : badge("Portail inactif", "private")}</td></tr>`;
+    return `<tr><td><button class="link-action" data-open-project="${p.id}">${p.name}</button></td><td>${money(totals.planned)}</td><td>${money(totals.validated)}</td><td>${money(totals.engaged)}</td><td>${money(totals.remaining)}</td><td>${currentRole().canSeeProfitability ? `${profit.rate} €/h · ${profit.level}` : badge("Masqué", "private")}</td><td>${p.clientAccess ? badge("Portail actif", "public") : badge("Portail inactif", "private")}</td></tr>`;
   }).join("");
-  return `${renderViewTitle("Finances", "Vue globale agence : budgets, engagements, restes disponibles et indicateurs internes.", `<button data-action="new-budget-line">Ajouter ligne globale</button>`)}
+  return `${renderViewTitle("Finances", "Vue globale agence : budgets, engagements, restes disponibles et indicateurs internes.", `<button class="btn-compact" data-action="new-budget-line">Ajouter ligne globale</button>`)}
     <div class="table-card table-wrap"><table><thead><tr><th>Projet</th><th>Prévu</th><th>Validé</th><th>Engagé</th><th>Reste</th><th>Rentabilité</th><th>Portail</th></tr></thead><tbody>${rows}</tbody></table></div>`;
 }
 
 function renderPlanningGlobal() {
-  return `${renderViewTitle("Planning global", "Vue multi-projets de l'agence : phases, jalons et alertes de retard.", `<button data-action="new-project">Créer jalon</button>`)}
+  return `${renderViewTitle("Planning global", "Vue multi-projets de l'agence : phases, jalons et alertes de retard.", `<button class="btn-compact" data-action="new-project">Créer jalon</button>`)}
     <div class="table-card table-wrap"><h3>Gantt global multi-projets</h3>${renderGantt()}</div>
-    <div class="grid cols-3" style="margin-top:14px">${visibleProjects().map((p) => `<div class="card"><h3>${p.name}</h3>${statusBadge(p.status)}<p>${p.phase}<br>${p.start} → ${p.end}</p><div class="mini-gantt"><i style="width:${p.progress}%"></i></div><button data-open-project="${p.id}">Ouvrir le projet</button></div>`).join("")}</div>`;
+    <div class="grid cols-3" style="margin-top:14px">${visibleProjects().map((p) => `<div class="card"><h3>${p.name}</h3>${statusBadge(p.status)}<p>${p.phase}<br>${p.start} → ${p.end}</p><div class="mini-gantt"><i style="width:${p.progress}%"></i></div><button class="btn-compact" data-open-project="${p.id}">Ouvrir le projet</button></div>`).join("")}</div>`;
 }
 
 function renderDocumentsGlobal() {
   const projectIds = visibleProjects().map((p) => p.id);
-  const docs = db.documents.filter((d) => projectIds.includes(d.projectId));
-  const rows = docs.map((d) => `<tr><td>${projectName(d.projectId)}</td><td>${d.title}</td><td>${d.type}</td><td>${d.phase}</td><td>${d.file}</td><td>${d.date}</td><td>${statusBadge(d.status === "Publié" ? "Finalisé" : d.status)}</td><td>${visibilityBadge(d)}</td><td>${actionButton("Ouvrir projet", `data-open-project="${d.projectId}"`)}${actionButton("Voir document", 'data-action="view-document"')}${actionButton(d.visibleClient ? "Masquer" : "Publier", `data-doc-publish="${d.id}"`, d.visibleClient ? "" : "success")}${actionButton("Supprimer", 'data-action="delete-document"', "danger")}</td></tr>`).join("");
-  return `${renderViewTitle("Documents globaux", "Bibliothèque agence transversale : factures, devis, contrats, plans, rendus et comptes rendus.", `<button data-action="new-document">Ajouter document</button>`)}
-    <div class="table-card table-wrap"><table><thead><tr><th>Projet</th><th>Titre</th><th>Type</th><th>Phase</th><th>Fichier</th><th>Date</th><th>Statut</th><th>Visibilité</th><th>Action</th></tr></thead><tbody>${rows}</tbody></table></div>`;
+  const docs = filteredDocuments(db.documents.filter((d) => projectIds.includes(d.projectId)));
+  const rows = docs.map((d) => `<tr><td>${projectName(d.projectId)}</td><td>${d.title}</td><td>${d.type}</td><td>${d.phase}</td><td>${d.file}</td><td>${d.date}</td><td>${statusBadge(d.status === "Publié" ? "Finalisé" : d.status)}</td><td>${visibilityBadge(d)}</td><td class="table-actions">${actionButton("Ouvrir projet", `data-open-project="${d.projectId}"`, "compact")}${moreActions([actionButton("Voir document", 'data-action="view-document"'), actionButton(d.visibleClient ? "Masquer" : "Publier", `data-doc-publish="${d.id}"`, d.visibleClient ? "" : "success"), actionButton("Supprimer", 'data-action="delete-document"', "danger")])}</td></tr>`).join("");
+  return `${renderViewTitle("Documents globaux", "Bibliothèque agence transversale : factures, devis, contrats, plans, rendus et comptes rendus.", `<button class="btn-compact" data-action="new-document">Ajouter document</button>`)}
+    <form class="filter-bar" id="documentFilters"><input name="query" value="${state.filters.documents}" placeholder="Rechercher un document, type, projet ou fichier" /><button type="submit" class="btn-compact">Rechercher</button></form>
+    <div class="table-card table-wrap"><table><thead><tr><th>Projet</th><th>Titre</th><th>Type</th><th>Phase</th><th>Fichier</th><th>Date</th><th>Statut</th><th>Visibilité</th><th>Action</th></tr></thead><tbody>${rows || `<tr><td colspan="9"><div class="empty">Aucun document ne correspond à cette recherche.</div></td></tr>`}</tbody></table></div>`;
 }
 
 function renderOverview() {
@@ -765,8 +822,12 @@ function renderTemplates() {
 }
 
 function renderSettings() {
-  const accessRows = db.accessAccounts.map((u) => `<tr><td><strong>${u.name}</strong><br>${u.identifier}</td><td>${u.role}</td><td>${u.projectId ? projectName(u.projectId) : "Agence"}</td><td>${u.passwordMasked}</td><td>${statusBadge(u.status)}</td><td>${u.permissions}</td><td>${actionButton("Modifier", `data-action="edit-access" data-id="${u.id}"`)}${actionButton("Réinitialiser", `data-action="reset-client-code" data-id="${u.id}"`)}${actionButton(u.status === "Actif" ? "Désactiver" : "Réactiver", `data-action="${u.status === "Actif" ? "disable-access" : "enable-access"}" data-id="${u.id}"`, u.status === "Actif" ? "danger" : "success")}</td></tr>`).join("");
-  return `${renderViewTitle("Paramètres", "Utilisateurs, identifiants, permissions, charte, statuts et seuils internes.", `${actionButton("Créer utilisateur", 'data-action="new-user"')}${actionButton("Enregistrer", 'data-action="save-settings"')}`)}
+  const accessRows = db.accessAccounts.map((u) => `<tr><td><strong>${u.name}</strong><br>${u.identifier}</td><td>${u.role}</td><td>${u.projectId ? projectName(u.projectId) : "Agence"}</td><td>${u.passwordMasked}</td><td>${statusBadge(u.status)}</td><td>${u.permissions}</td><td class="table-actions">${actionButton("Modifier", `data-action="edit-access" data-id="${u.id}"`, "compact")}${moreActions([actionButton("Réinitialiser", `data-action="reset-client-code" data-id="${u.id}"`), actionButton(u.status === "Actif" ? "Désactiver" : "Réactiver", `data-action="${u.status === "Actif" ? "disable-access" : "enable-access"}" data-id="${u.id}"`, u.status === "Actif" ? "danger" : "success")])}</td></tr>`).join("");
+  return `${renderViewTitle("Paramètres", "Réglages essentiels : accès, rôles, charte, statuts et seuils.", `${actionButton("Créer utilisateur", 'data-action="new-user"', "compact")}${actionButton("Enregistrer", 'data-action="save-settings"', "compact")}`)}
+    <div class="settings-hero">
+      <img src="https://www.esprit-design-architecture.com/wp-content/uploads/2025/01/Design-sans-titre-2025-01-15T143328.321.png" alt="Logo Esprit Design Architecture" />
+      <div><h3>Esprit Design Architecture</h3><p>Portail privé, accès clients et paramètres de démonstration.</p></div>
+    </div>
     <div class="grid cols-2">
       <div class="card full-span"><h3>Utilisateurs & accès</h3><div class="table-wrap"><table><thead><tr><th>Identifiant</th><th>Rôle</th><th>Projet lié</th><th>Mot de passe</th><th>Statut</th><th>Permissions</th><th>Actions</th></tr></thead><tbody>${accessRows}</tbody></table></div></div>
       <div class="card full-span"><h3>Créer un accès client</h3><div class="form-grid">
@@ -780,7 +841,7 @@ function renderSettings() {
         <label>Confirmation<input id="accessPasswordConfirm" type="password"></label>
         <label class="full"><input type="checkbox" id="accessForceChange"> Forcer le changement du mot de passe à la première connexion</label>
       </div><div class="actions">${actionButton("Créer accès client", 'data-action="create-client-access"', "success")}</div></div>
-      <div class="card"><h3>Permissions collaborateur</h3><p>Lecture seule, modification, publication côté client, comptes rendus, shopping list, tâches, budget visible client, documents internes, temps/rentabilité si autorisé.</p>${actionButton("Modifier permissions", 'data-action="edit-permissions"')}</div>
+      <div class="card"><h3>Permissions collaborateur</h3><p>Lecture seule, modification, publication côté client, comptes rendus, shopping list, tâches, budget visible client, documents internes, temps/rentabilité si autorisé.</p>${actionButton("Modifier permissions", 'data-action="edit-permissions"', "compact")}</div>
       <div class="card"><h3>Seuils rentabilité</h3><p>Bonne : ${db.settings.profitability.good} €/h<br>Moyenne : ${db.settings.profitability.medium} €/h<br>Faible : ${db.settings.profitability.weak} €/h<br>Non rentable : sous ${db.settings.profitability.weak} €/h</p></div>
       <div class="card"><h3>Charte</h3><p>Blair TTC / Acumin Variable Concept avec Poppins en alternative web. Aucune police manuscrite n'est utilisée dans le portail.</p>${Object.entries(db.settings.brand).map(([k, v]) => `<span class="badge" style="background:${v};color:var(--beige)">${k} ${v}</span>`).join(" ")}</div>
       <div class="card"><h3>Statuts éditables</h3><p><strong>Phases</strong><br>${db.phases.join(" · ")}</p><p><strong>Documents</strong><br>Brouillon · Finalisé · Archivé</p><p><strong>Produits</strong><br>Idée interne · Proposé au client · Validé · Refusé · Alternative demandée · À commander · Commandé · Reçu · Installé</p></div>
@@ -803,7 +864,7 @@ function renderGantt() {
   const columns = db.phases;
   return `<div class="gantt"><div class="gantt-head"><span>Projet</span>${columns.map((c) => `<span>${c.split(" ")[0]}</span>`).join("")}</div>${visibleProjects().map((p) => {
     const activeIndex = columns.indexOf(p.phase);
-    return `<div class="gantt-row"><span class="gantt-name">${p.name}</span>${columns.map((phase, index) => `<span class="gantt-cell">${index <= activeIndex ? `<i class="gantt-bar ${p.health === "À surveiller" && index === activeIndex ? "warn" : ""}" style="width:${index === activeIndex ? p.progress : 100}%">${index === activeIndex ? `${p.progress}%` : "✓"}</i>` : ""}</span>`).join("")}</div>`;
+    return `<div class="gantt-row"><span class="gantt-name">${p.name}</span>${columns.map((phase, index) => `<span class="gantt-cell" title="${phase}">${index <= activeIndex ? `<i class="gantt-bar ${p.health === "À surveiller" && index === activeIndex ? "warn" : ""}" style="width:${index === activeIndex ? p.progress : 100}%"></i>` : ""}</span>`).join("")}</div>`;
   }).join("")}</div>`;
 }
 
@@ -828,6 +889,31 @@ function profitability(project) {
 }
 
 function bindViewActions() {
+  const projectFilters = $("#projectFilters");
+  if (projectFilters) projectFilters.addEventListener("submit", (event) => {
+    event.preventDefault();
+    const data = new FormData(projectFilters);
+    state.filters.projects = {
+      query: String(data.get("query") || "").trim(),
+      phase: String(data.get("phase") || ""),
+      status: String(data.get("status") || ""),
+      priority: String(data.get("priority") || "")
+    };
+    renderApp();
+  });
+  const clientFilters = $("#clientFilters");
+  if (clientFilters) clientFilters.addEventListener("submit", (event) => {
+    event.preventDefault();
+    state.filters.clients = String(new FormData(clientFilters).get("query") || "").trim();
+    state.showClientForm = false;
+    renderApp();
+  });
+  const documentFilters = $("#documentFilters");
+  if (documentFilters) documentFilters.addEventListener("submit", (event) => {
+    event.preventDefault();
+    state.filters.documents = String(new FormData(documentFilters).get("query") || "").trim();
+    renderApp();
+  });
   $$("[data-open-project]").forEach((btn) => btn.addEventListener("click", () => enterProject(btn.dataset.openProject)));
   $$("[data-preview-client]").forEach((btn) => btn.addEventListener("click", () => previewClientPortal(btn.dataset.previewClient)));
   $$("[data-delete-project]").forEach((btn) => btn.addEventListener("click", () => confirmDeleteProject(btn.dataset.deleteProject)));
@@ -881,6 +967,7 @@ function handleAction(action) {
     state.activeProjectId = null;
     state.previewClient = false;
     state.view = "clients";
+    state.showClientForm = true;
     renderApp();
     toast("Formulaire nouveau client ouvert.");
     return;
